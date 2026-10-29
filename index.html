@@ -22,6 +22,8 @@
             wolvesNavy: '#0d1b2a',
             wolvesGold: '#d89c4e',
             wolvesAccent: '#1b263b',
+            wolvesNavyDark: '#070d15',
+            wolvesGoldLight: '#f4c582',
           }
         }
       }
@@ -84,6 +86,23 @@
         transform: scale(1) translateY(0);
       }
     }
+
+    /* Custom Scrollbar Styling */
+    .custom-scrollbar::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+    .custom-scrollbar::-webkit-scrollbar-track {
+      background: rgba(0, 0, 0, 0.05);
+      border-radius: 8px;
+    }
+    .dark .custom-scrollbar::-webkit-scrollbar-track {
+      background: rgba(255, 255, 255, 0.05);
+    }
+    .custom-scrollbar::-webkit-scrollbar-thumb {
+      background: #d89c4e;
+      border-radius: 8px;
+    }
   </style>
 </head>
 <body class="bg-gray-100/90 dark:bg-gray-950 min-h-screen text-gray-800 dark:text-gray-100 font-sans flex flex-col transition-colors duration-200 antialiased selection:bg-wolvesGold selection:text-wolvesNavy">
@@ -92,12 +111,15 @@
   <header class="bg-wolvesNavy/95 backdrop-blur-md text-white shadow-md border-b-4 border-wolvesGold sticky top-0 z-30 transition-all">
     <div class="max-w-7xl mx-auto px-3 sm:px-5 py-2.5 flex flex-wrap justify-between items-center gap-3">
       <div class="flex items-center space-x-3">
-        <div class="h-10 w-10 sm:h-12 sm:w-12 flex items-center justify-center bg-wolvesNavy/60 rounded-xl p-1 border border-wolvesGold/30 shadow-inner">
+        <div class="h-10 w-10 sm:h-12 sm:w-12 flex items-center justify-center bg-wolvesNavy/60 rounded-xl p-1 border border-wolvesGold/40 shadow-inner">
           <img id="appHeaderLogo" src="wolves logo jpgs-02.jpg" alt="JLC Scunthorpe Wolves Logo" class="max-h-full max-w-full object-contain" onerror="this.style.display='none'">
         </div>
         <div>
-          <h1 class="text-base sm:text-xl font-extrabold tracking-wide text-white">JLC Scunthorpe Wolves</h1>
-          <p class="text-[10px] sm:text-xs text-amber-300/90 font-medium tracking-wide">Session Planner & Drill Bank</p>
+          <h1 class="text-base sm:text-xl font-extrabold tracking-wide text-white flex items-center gap-2">
+            <span>JLC Scunthorpe Wolves</span>
+            <span class="text-[10px] bg-wolvesGold text-wolvesNavy font-black px-2 py-0.5 rounded-md uppercase tracking-wider hidden sm:inline-block">HQ</span>
+          </h1>
+          <p class="text-[10px] sm:text-xs text-amber-300/90 font-medium tracking-wide">Official Club Coaching Planner & Drill Hub</p>
         </div>
       </div>
       
@@ -130,7 +152,7 @@
 
   <!-- MOBILE NAVIGATION MODE TAB SWITCHER (< lg screens) -->
   <div id="mobileNavTabs" class="max-w-7xl mx-auto px-3 pt-3 w-full lg:hidden flex items-center gap-2">
-    <button id="mobileTabLibrary" onclick="switchMobileTab('library')" class="flex-1 py-2.5 px-3 rounded-xl text-xs font-bold transition-all shadow-xs flex items-center justify-center gap-1.5 bg-wolvesNavy text-white dark:bg-wolvesGold dark:text-wolvesNavy">
+    <button id="mobileTabLibrary" onclick="switchMobileTab('library')" class="flex-1 py-2.5 px-3 rounded-xl text-xs font-bold transition-all shadow-xs flex items-center justify-center gap-1.5 bg-wolvesNavy text-white dark:bg-wolvesGold dark:text-wolvesNavy border border-transparent">
       <span>🏀</span> Drill Library
     </button>
     <button id="mobileTabPlan" onclick="switchMobileTab('plan')" class="flex-1 py-2.5 px-3 rounded-xl text-xs font-bold transition-all shadow-xs flex items-center justify-center gap-1.5 bg-white text-gray-700 dark:bg-gray-800 dark:text-gray-200 border border-gray-200 dark:border-gray-700">
@@ -153,10 +175,13 @@
       </div>
 
       <div class="bg-white dark:bg-gray-800/90 p-4 sm:p-5 rounded-2xl shadow-xs border border-gray-200/80 dark:border-gray-700/80 shrink-0 backdrop-blur-xs">
-        <div class="flex justify-between items-center mb-2">
-          <h2 class="font-black text-base sm:text-lg text-wolvesNavy dark:text-amber-400 flex items-center gap-2">
-            <span>🏀</span> Drill Library
-          </h2>
+        <div class="flex justify-between items-center mb-3">
+          <div class="flex items-center gap-2">
+            <h2 class="font-black text-base sm:text-lg text-wolvesNavy dark:text-amber-400 flex items-center gap-2">
+              <span>🏀</span> Drill Library
+            </h2>
+            <span id="libraryDrillCount" class="text-[10px] font-extrabold bg-wolvesNavy/10 dark:bg-wolvesGold/20 text-wolvesNavy dark:text-amber-300 px-2 py-0.5 rounded-md border border-wolvesNavy/20 dark:border-wolvesGold/30">0</span>
+          </div>
           <div class="flex items-center gap-2">
             <button onclick="fetchSheetDrills()" class="text-xs bg-emerald-50 dark:bg-emerald-950/50 hover:bg-emerald-100 dark:hover:bg-emerald-900/60 text-emerald-700 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-800 font-bold px-2.5 py-1 rounded-lg transition-all active:scale-95 flex items-center gap-1">
               🔄 Sync
@@ -166,28 +191,47 @@
             </button>
           </div>
         </div>
-        <p class="text-xs text-gray-500 dark:text-gray-400 mb-3.5">Hover tile for pop-up card details or click '+ Add' to place drill into timeline.</p>
-        
-        <!-- Creator & Category Filters Area -->
-        <div class="flex flex-col gap-2.5 mb-1">
-          <div class="flex items-center justify-between gap-2 bg-gray-50 dark:bg-gray-700/50 p-2.5 rounded-xl border border-gray-200/80 dark:border-gray-600/80">
-            <label for="creatorFilterSelect" class="text-xs font-bold text-gray-700 dark:text-gray-300 shrink-0 flex items-center gap-1">
-              👤 Filter Creator:
-            </label>
-            <select id="creatorFilterSelect" onchange="setCreatorFilter(this.value)" class="text-xs bg-white dark:bg-gray-800 text-gray-800 dark:text-gray-100 border border-gray-300/80 dark:border-gray-600/80 rounded-lg px-2.5 py-1 font-semibold focus:ring-2 focus:ring-wolvesGold/50 focus:outline-none w-full max-w-[200px] transition-all">
-              <!-- Dynamically populated options -->
-            </select>
+
+        <!-- SEARCH BAR & QUICK FILTERS FOR LARGE LIBRARIES -->
+        <div class="flex flex-col gap-2.5 mb-3">
+          <div class="relative">
+            <input type="text" id="drillSearchInput" oninput="handleSearchInput(this.value)" placeholder="🔍 Search drills by title, constraint, keyword..." class="w-full text-xs bg-gray-50 dark:bg-gray-700/60 text-gray-800 dark:text-gray-100 border border-gray-300/80 dark:border-gray-600/80 rounded-xl pl-8 pr-8 py-2 font-medium focus:ring-2 focus:ring-wolvesGold/50 focus:outline-none transition-all">
+            <button id="clearSearchBtn" onclick="clearSearchFilter()" class="hidden absolute right-2.5 top-2 text-xs text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 font-bold">&times;</button>
+          </div>
+
+          <!-- Creator & Sort Options -->
+          <div class="grid grid-cols-2 gap-2">
+            <div class="flex items-center justify-between gap-1 bg-gray-50 dark:bg-gray-700/50 p-1.5 px-2.5 rounded-xl border border-gray-200/80 dark:border-gray-600/80">
+              <label for="creatorFilterSelect" class="text-[11px] font-bold text-gray-700 dark:text-gray-300 shrink-0">
+                👤 Creator:
+              </label>
+              <select id="creatorFilterSelect" onchange="setCreatorFilter(this.value)" class="text-[11px] bg-white dark:bg-gray-800 text-gray-800 dark:text-gray-100 border border-gray-300/80 dark:border-gray-600/80 rounded-lg px-1.5 py-0.5 font-semibold focus:ring-1 focus:ring-wolvesGold/50 focus:outline-none w-full">
+                <!-- Dynamically populated options -->
+              </select>
+            </div>
+
+            <div class="flex items-center justify-between gap-1 bg-gray-50 dark:bg-gray-700/50 p-1.5 px-2.5 rounded-xl border border-gray-200/80 dark:border-gray-600/80">
+              <label for="sortFilterSelect" class="text-[11px] font-bold text-gray-700 dark:text-gray-300 shrink-0">
+                ↕️ Sort:
+              </label>
+              <select id="sortFilterSelect" onchange="setSortOrder(this.value)" class="text-[11px] bg-white dark:bg-gray-800 text-gray-800 dark:text-gray-100 border border-gray-300/80 dark:border-gray-600/80 rounded-lg px-1.5 py-0.5 font-semibold focus:ring-1 focus:ring-wolvesGold/50 focus:outline-none w-full">
+                <option value="NAME_ASC">Name (A-Z)</option>
+                <option value="DURATION_ASC">Duration (Low-High)</option>
+                <option value="DURATION_DESC">Duration (High-Low)</option>
+              </select>
+            </div>
           </div>
 
           <!-- Category Selector Tabs -->
-          <div class="flex gap-1.5 overflow-x-auto pb-1 scrollbar-thin" id="categoryTabs">
+          <div class="flex gap-1.5 overflow-x-auto pb-1 custom-scrollbar" id="categoryTabs">
             <!-- Populated by JS -->
           </div>
         </div>
+        <p class="text-[11px] text-gray-500 dark:text-gray-400">Hover any drill tile to preview details or click '+ Add' to place in timeline.</p>
       </div>
 
       <!-- Compact Drill Cards Container (Hover for Pop-up Card Details) -->
-      <div id="drillBank" class="flex flex-col gap-2 overflow-y-auto flex-1 min-h-[250px] max-h-[500px] lg:max-h-none pr-1 pb-2">
+      <div id="drillBank" class="flex flex-col gap-2 overflow-y-auto flex-1 min-h-[250px] max-h-[500px] lg:max-h-none pr-1 pb-2 custom-scrollbar">
         <!-- Populated by JS -->
       </div>
     </section>
@@ -357,7 +401,7 @@
         <h3 class="font-bold text-sm">Hybrid Export & Share Options</h3>
         <button onclick="closeExportModal()" class="text-gray-300 hover:text-white font-bold text-lg">&times;</button>
       </div>
-      <div class="p-5 flex flex-col gap-3 max-h-[80vh] overflow-y-auto">
+      <div class="p-5 flex flex-col gap-3 max-h-[80vh] overflow-y-auto custom-scrollbar">
         
         <button onclick="closeExportModal(); exportToPDF();" class="flex items-center justify-between p-3.5 rounded-xl border border-gray-200 dark:border-gray-700 hover:border-wolvesGold hover:bg-amber-50/60 dark:hover:bg-gray-700/60 transition-all group text-left shadow-2xs">
           <div class="flex items-center gap-3">
@@ -561,6 +605,8 @@
     const drillCategories = ["Warm Up", "Offensive", "Defensive", "Skill Based", "Transition", "Mentality"];
     let currentCategory = "Warm Up";
     let currentCreatorFilter = "ALL";
+    let searchQuery = "";
+    let sortOrder = "NAME_ASC"; // 'NAME_ASC' | 'DURATION_ASC' | 'DURATION_DESC'
 
     // Transforming Basketball Default Drills
     let defaultDrills = [
@@ -663,6 +709,30 @@
       // Open startup coach identity modal
       openCoachIdentifyModal();
     });
+
+    // --- SEARCH & SORT CONTROLS ---
+    function handleSearchInput(val) {
+      searchQuery = val.trim().toLowerCase();
+      const clearBtn = document.getElementById('clearSearchBtn');
+      if (searchQuery) {
+        clearBtn.classList.remove('hidden');
+      } else {
+        clearBtn.classList.add('hidden');
+      }
+      renderDrillBank();
+    }
+
+    function clearSearchFilter() {
+      document.getElementById('drillSearchInput').value = '';
+      searchQuery = '';
+      document.getElementById('clearSearchBtn').classList.add('hidden');
+      renderDrillBank();
+    }
+
+    function setSortOrder(order) {
+      sortOrder = order;
+      renderDrillBank();
+    }
 
     // --- MOBILE TAB SWITCHER LOGIC ---
     function switchMobileTab(view) {
@@ -1110,7 +1180,7 @@
       const container = document.getElementById('categoryTabs');
       container.innerHTML = drillCategories.map(cat => `
         <button onclick="setCategory('${cat}')" 
-          class="px-3 py-1.5 text-xs font-bold rounded-xl whitespace-nowrap transition-all active:scale-95 ${
+          class="px-3 py-1 text-[11px] font-bold rounded-xl whitespace-nowrap transition-all active:scale-95 ${
             currentCategory === cat 
               ? 'bg-wolvesNavy text-white dark:bg-wolvesGold dark:text-wolvesNavy shadow-xs' 
               : 'bg-gray-100/80 text-gray-600 dark:bg-gray-700/60 dark:text-gray-300 hover:bg-gray-200/80 dark:hover:bg-gray-600/80'
@@ -1126,18 +1196,43 @@
       renderDrillBank();
     }
 
-    // --- MINIMISED TILE RENDERER WITH SMALL POP-UP CARD ON HOVER ---
+    // --- MINIMISED TILE RENDERER WITH SEARCH & SORT SUPPORT ---
     function renderDrillBank() {
       const bank = document.getElementById('drillBank');
       const filtered = drills.filter(d => {
         const cats = getDrillCategories(d);
         const matchesCategory = cats.includes(currentCategory);
         const matchesCreator = (currentCreatorFilter === "ALL") || ((d.createdBy || 'Transforming Basketball') === currentCreatorFilter);
-        return matchesCategory && matchesCreator;
+        
+        let matchesSearch = true;
+        if (searchQuery) {
+          const inTitle = d.title.toLowerCase().includes(searchQuery);
+          const inSummary = (d.summary || '').toLowerCase().includes(searchQuery);
+          const inCreator = (d.createdBy || '').toLowerCase().includes(searchQuery);
+          matchesSearch = inTitle || inSummary || inCreator;
+        }
+
+        return matchesCategory && matchesCreator && matchesSearch;
       });
 
+      // Sort Drills
+      filtered.sort((a, b) => {
+        if (sortOrder === "NAME_ASC") {
+          return a.title.localeCompare(b.title);
+        } else if (sortOrder === "DURATION_ASC") {
+          return a.defaultDuration - b.defaultDuration;
+        } else if (sortOrder === "DURATION_DESC") {
+          return b.defaultDuration - a.defaultDuration;
+        }
+        return 0;
+      });
+
+      // Update Drill Counter Badge
+      const countEl = document.getElementById('libraryDrillCount');
+      if (countEl) countEl.innerText = filtered.length;
+
       if(filtered.length === 0) {
-        bank.innerHTML = `<div class="py-8 text-center text-xs text-gray-400 dark:text-gray-500 italic border-2 border-dashed border-gray-200 dark:border-gray-700 rounded-xl">No drills found matching this filter.</div>`;
+        bank.innerHTML = `<div class="py-8 text-center text-xs text-gray-400 dark:text-gray-500 italic border-2 border-dashed border-gray-200 dark:border-gray-700 rounded-xl">No drills found matching this filter/search.</div>`;
         return;
       }
 
@@ -1186,7 +1281,7 @@
                 ${badgesHtml}
               </div>
 
-              <p class="text-[11px] text-gray-600 dark:text-gray-300 leading-relaxed max-h-24 overflow-y-auto scrollbar-thin bg-gray-50 dark:bg-gray-700/40 p-2 rounded-xl border border-gray-100 dark:border-gray-700/60">
+              <p class="text-[11px] text-gray-600 dark:text-gray-300 leading-relaxed max-h-24 overflow-y-auto custom-scrollbar bg-gray-50 dark:bg-gray-700/40 p-2 rounded-xl border border-gray-100 dark:border-gray-700/60">
                 ${drill.summary}
               </p>
 
