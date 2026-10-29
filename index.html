@@ -1,0 +1,2148 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>JLC Scunthorpe Wolves - Session Planner</title>
+  <!-- Tailwind CSS via CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- html2pdf.js via CDN for PDF Export -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+  <!-- html2canvas via CDN for PNG/JPEG Export -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+  <!-- Instagram Official Embed SDK -->
+  <script async src="https://www.instagram.com/embed.js"></script>
+  <!-- Tailwind Custom Config for JLC Wolves Colors & Dark Mode -->
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            wolvesNavy: '#0d1b2a',
+            wolvesGold: '#d89c4e',
+            wolvesAccent: '#1b263b',
+          }
+        }
+      }
+    }
+  </script>
+  <script>
+    // Initial theme check script before render to avoid theme flicker
+    if (localStorage.getItem('wolves_theme') === 'dark' || 
+        (!('wolves_theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+      document.documentElement.classList.add('dark');
+    } else {
+      document.documentElement.classList.remove('dark');
+    }
+  </script>
+  <style>
+    /* Native Browser Print Optimization */
+    @media print {
+      header, #adminBanner, #mobileNavTabs, section:first-child, .no-print, #toastNotification {
+        display: none !important;
+      }
+      body {
+        background: white !important;
+        color: black !important;
+      }
+      main {
+        display: block !important;
+        padding: 0 !important;
+      }
+      #sessionPlanPrintArea {
+        border: none !important;
+        box-shadow: none !important;
+        width: 100% !important;
+      }
+      .section-title-input {
+        border: none !important;
+        background: transparent !important;
+      }
+    }
+
+    /* Mobile View Toggle Helper */
+    @media (max-width: 1023px) {
+      .mobile-hide {
+        display: none !important;
+      }
+    }
+
+    /* Floating Hover Pop-Up Card Elevation & Animation */
+    .drill-hover-card {
+      box-shadow: 0 16px 32px -4px rgba(0, 0, 0, 0.35), 0 8px 16px -4px rgba(0, 0, 0, 0.2);
+      animation: popIn 0.15s ease-out forwards;
+    }
+
+    @keyframes popIn {
+      from {
+        opacity: 0;
+        transform: scale(0.96) translateY(-4px);
+      }
+      to {
+        opacity: 1;
+        transform: scale(1) translateY(0);
+      }
+    }
+  </style>
+</head>
+<body class="bg-gray-100/90 dark:bg-gray-950 min-h-screen text-gray-800 dark:text-gray-100 font-sans flex flex-col transition-colors duration-200 antialiased selection:bg-wolvesGold selection:text-wolvesNavy">
+
+  <!-- Header Section -->
+  <header class="bg-wolvesNavy/95 backdrop-blur-md text-white shadow-md border-b-4 border-wolvesGold sticky top-0 z-30 transition-all">
+    <div class="max-w-7xl mx-auto px-3 sm:px-5 py-2.5 flex flex-wrap justify-between items-center gap-3">
+      <div class="flex items-center space-x-3">
+        <div class="h-10 w-10 sm:h-12 sm:w-12 flex items-center justify-center bg-wolvesNavy/60 rounded-xl p-1 border border-wolvesGold/30 shadow-inner">
+          <img id="appHeaderLogo" src="wolves logo jpgs-02.jpg" alt="JLC Scunthorpe Wolves Logo" class="max-h-full max-w-full object-contain" onerror="this.style.display='none'">
+        </div>
+        <div>
+          <h1 class="text-base sm:text-xl font-extrabold tracking-wide text-white">JLC Scunthorpe Wolves</h1>
+          <p class="text-[10px] sm:text-xs text-amber-300/90 font-medium tracking-wide">Session Planner & Drill Bank</p>
+        </div>
+      </div>
+      
+      <div class="flex items-center gap-1.5 sm:gap-2 flex-wrap">
+        <!-- Active Coach Indicator Button -->
+        <button id="activeCoachBadge" onclick="openCoachIdentifyModal()" class="text-xs bg-amber-500/15 hover:bg-amber-500/30 text-amber-200 px-3 py-1.5 rounded-lg font-medium border border-wolvesGold/40 transition-all active:scale-95 flex items-center gap-1.5 shadow-2xs">
+          <span>👤 Coach:</span> <span id="headerCoachName" class="font-bold text-white">Not Selected</span>
+        </button>
+
+        <button id="themeToggleBtn" onclick="toggleDarkMode()" aria-label="Toggle Theme" class="text-xs bg-wolvesAccent/80 hover:bg-slate-700 text-amber-200 px-3 py-1.5 rounded-lg font-medium border border-wolvesGold/30 transition-all active:scale-95 flex items-center gap-1 shadow-2xs">
+          <span id="themeToggleIcon">🌙</span> <span id="themeToggleText" class="hidden sm:inline">Dark</span>
+        </button>
+
+        <button id="adminToggleBtn" onclick="toggleAdminMode()" class="text-xs bg-amber-600/25 hover:bg-amber-600/40 text-amber-200 px-3 py-1.5 rounded-lg font-medium border border-amber-500/40 transition-all active:scale-95 flex items-center gap-1 shadow-2xs">
+          🔒 Admin
+        </button>
+        
+        <button onclick="openSettingsModal()" class="text-xs bg-wolvesAccent/80 hover:bg-slate-700 text-amber-200 px-3 py-1.5 rounded-lg font-medium border border-wolvesGold/30 transition-all active:scale-95 flex items-center gap-1 shadow-2xs">
+          ⚙️ Sync
+        </button>
+        <button onclick="clearSession()" class="text-xs bg-red-950/50 hover:bg-red-800/80 text-red-200 px-3 py-1.5 rounded-lg font-medium border border-red-700/50 transition-all active:scale-95 shadow-2xs">
+          Clear Plan
+        </button>
+        <button onclick="openExportModal()" class="bg-wolvesGold hover:bg-amber-400 text-wolvesNavy font-bold px-3.5 py-1.5 sm:px-4 sm:py-2 rounded-lg shadow-sm hover:shadow transition-all active:scale-95 flex items-center gap-1.5 text-xs sm:text-sm">
+          📤 Export / Share
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- MOBILE NAVIGATION MODE TAB SWITCHER (< lg screens) -->
+  <div id="mobileNavTabs" class="max-w-7xl mx-auto px-3 pt-3 w-full lg:hidden flex items-center gap-2">
+    <button id="mobileTabLibrary" onclick="switchMobileTab('library')" class="flex-1 py-2.5 px-3 rounded-xl text-xs font-bold transition-all shadow-xs flex items-center justify-center gap-1.5 bg-wolvesNavy text-white dark:bg-wolvesGold dark:text-wolvesNavy">
+      <span>🏀</span> Drill Library
+    </button>
+    <button id="mobileTabPlan" onclick="switchMobileTab('plan')" class="flex-1 py-2.5 px-3 rounded-xl text-xs font-bold transition-all shadow-xs flex items-center justify-center gap-1.5 bg-white text-gray-700 dark:bg-gray-800 dark:text-gray-200 border border-gray-200 dark:border-gray-700">
+      <span>📋</span> Session Plan (<span id="mobilePlanMinsBadge">0</span>m)
+    </button>
+  </div>
+
+  <!-- Main Container -->
+  <main class="max-w-7xl mx-auto px-3 sm:px-5 py-4 sm:py-7 flex-1 grid grid-cols-1 lg:grid-cols-12 gap-6 w-full items-start">
+    
+    <!-- LEFT PANEL: Drill Bank (5 cols) -->
+    <section id="drillLibrarySection" class="lg:col-span-5 flex flex-col gap-4 lg:sticky lg:top-20 lg:max-h-[calc(100vh-100px)]">
+      
+      <!-- Admin Mode Alert Banner -->
+      <div id="adminBanner" class="hidden bg-amber-500/10 border border-amber-500/30 p-3 rounded-xl flex justify-between items-center text-xs text-amber-800 dark:text-amber-300 shrink-0 backdrop-blur-xs">
+        <span class="font-bold flex items-center gap-1.5">
+          <span>🔓</span> Admin Mode Active: You can edit or delete any drill.
+        </span>
+        <button onclick="exitAdminMode()" class="text-[11px] underline font-extrabold hover:text-amber-950 dark:hover:text-amber-100 transition-colors">Lock</button>
+      </div>
+
+      <div class="bg-white dark:bg-gray-800/90 p-4 sm:p-5 rounded-2xl shadow-xs border border-gray-200/80 dark:border-gray-700/80 shrink-0 backdrop-blur-xs">
+        <div class="flex justify-between items-center mb-2">
+          <h2 class="font-black text-base sm:text-lg text-wolvesNavy dark:text-amber-400 flex items-center gap-2">
+            <span>🏀</span> Drill Library
+          </h2>
+          <div class="flex items-center gap-2">
+            <button onclick="fetchSheetDrills()" class="text-xs bg-emerald-50 dark:bg-emerald-950/50 hover:bg-emerald-100 dark:hover:bg-emerald-900/60 text-emerald-700 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-800 font-bold px-2.5 py-1 rounded-lg transition-all active:scale-95 flex items-center gap-1">
+              🔄 Sync
+            </button>
+            <button onclick="openAddDrillModal()" class="text-xs bg-wolvesGold hover:bg-amber-400 text-wolvesNavy font-bold px-3 py-1 rounded-lg transition-all active:scale-95 shadow-2xs">
+              + Add Drill
+            </button>
+          </div>
+        </div>
+        <p class="text-xs text-gray-500 dark:text-gray-400 mb-3.5">Hover tile for pop-up card details or click '+ Add' to place drill into timeline.</p>
+        
+        <!-- Creator & Category Filters Area -->
+        <div class="flex flex-col gap-2.5 mb-1">
+          <div class="flex items-center justify-between gap-2 bg-gray-50 dark:bg-gray-700/50 p-2.5 rounded-xl border border-gray-200/80 dark:border-gray-600/80">
+            <label for="creatorFilterSelect" class="text-xs font-bold text-gray-700 dark:text-gray-300 shrink-0 flex items-center gap-1">
+              👤 Filter Creator:
+            </label>
+            <select id="creatorFilterSelect" onchange="setCreatorFilter(this.value)" class="text-xs bg-white dark:bg-gray-800 text-gray-800 dark:text-gray-100 border border-gray-300/80 dark:border-gray-600/80 rounded-lg px-2.5 py-1 font-semibold focus:ring-2 focus:ring-wolvesGold/50 focus:outline-none w-full max-w-[200px] transition-all">
+              <!-- Dynamically populated options -->
+            </select>
+          </div>
+
+          <!-- Category Selector Tabs -->
+          <div class="flex gap-1.5 overflow-x-auto pb-1 scrollbar-thin" id="categoryTabs">
+            <!-- Populated by JS -->
+          </div>
+        </div>
+      </div>
+
+      <!-- Compact Drill Cards Container (Hover for Pop-up Card Details) -->
+      <div id="drillBank" class="flex flex-col gap-2 overflow-y-auto flex-1 min-h-[250px] max-h-[500px] lg:max-h-none pr-1 pb-2">
+        <!-- Populated by JS -->
+      </div>
+    </section>
+
+    <!-- RIGHT PANEL: Session Builder Area (7 cols) -->
+    <section id="sessionPlanSection" class="lg:col-span-7 flex flex-col gap-5 mobile-hide">
+      
+      <!-- Session Details Header Card -->
+      <div class="bg-white dark:bg-gray-800/90 p-4 sm:p-5 rounded-2xl shadow-xs border border-gray-200/80 dark:border-gray-700/80 backdrop-blur-xs">
+        <h2 class="text-xs font-black uppercase tracking-wider text-gray-400 dark:text-gray-400 mb-3.5 flex items-center gap-1.5">
+          <span>⚙️</span> Session Configuration
+        </h2>
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4">
+          
+          <div>
+            <label class="block text-xs font-bold text-gray-700 dark:text-gray-300 mb-1.5">Squad Group</label>
+            <select id="teamSelect" onchange="updateTeamBranding(); autoSaveSessionState();" class="w-full text-xs sm:text-sm border border-gray-300/80 dark:border-gray-600/80 rounded-xl p-2.5 bg-gray-50/80 dark:bg-gray-700/80 dark:text-white font-medium focus:ring-2 focus:ring-wolvesGold/50 focus:outline-none transition-all">
+              <option value="Junior Boys">Junior Boys</option>
+              <option value="Junior Girls">Junior Girls</option>
+              <option value="Mixed Community">Mixed Community</option>
+              <option value="U14 NBL">U14 NBL</option>
+              <option value="U16 NBL">U16 NBL</option>
+              <option value="College">College</option>
+            </select>
+          </div>
+
+          <div>
+            <label class="block text-xs font-bold text-gray-700 dark:text-gray-300 mb-1.5">Lead Coach</label>
+            <select id="coachSelect" onchange="handleCoachSelectChange(this.value)" class="w-full text-xs sm:text-sm border border-gray-300/80 dark:border-gray-600/80 rounded-xl p-2.5 bg-gray-50/80 dark:bg-gray-700/80 dark:text-white font-bold focus:ring-2 focus:ring-wolvesGold/50 focus:outline-none transition-all">
+              <option value="James Brough">James Brough</option>
+              <option value="James Turner">James Turner</option>
+              <option value="Ikechukwu Benjamin">Ikechukwu Benjamin</option>
+              <option value="Jason Shakespeare">Jason Shakespeare</option>
+              <option value="Other Coach">Other Coach</option>
+            </select>
+          </div>
+
+          <div>
+            <label class="block text-xs font-bold text-gray-700 dark:text-gray-300 mb-1.5">Date</label>
+            <input type="date" id="sessionDate" onchange="autoSaveSessionState()" class="w-full text-xs sm:text-sm border border-gray-300/80 dark:border-gray-600/80 rounded-xl p-2.5 bg-gray-50/80 dark:bg-gray-700/80 dark:text-white font-medium focus:ring-2 focus:ring-wolvesGold/50 focus:outline-none transition-all">
+          </div>
+
+          <div>
+            <label class="block text-xs font-bold text-gray-700 dark:text-gray-300 mb-1.5">Target (Mins)</label>
+            <input type="number" id="targetDuration" value="90" step="5" min="10" class="w-full text-xs sm:text-sm border border-gray-300/80 dark:border-gray-600/80 rounded-xl p-2.5 bg-gray-50/80 dark:bg-gray-700/80 dark:text-white font-bold focus:ring-2 focus:ring-wolvesGold/50 focus:outline-none transition-all" onchange="calculateStats(); autoSaveSessionState();">
+          </div>
+
+        </div>
+      </div>
+
+      <!-- Printable Timeline Container -->
+      <div id="sessionPlanPrintArea" class="bg-white dark:bg-gray-800/90 p-4 sm:p-6 rounded-2xl shadow-xs border border-gray-200/80 dark:border-gray-700/80 flex-1 flex flex-col backdrop-blur-xs">
+        
+        <!-- Session Summary Progress Bar -->
+        <div class="mb-5 bg-gray-50 dark:bg-gray-700/40 p-3.5 rounded-xl border border-gray-200/60 dark:border-gray-700/60">
+          <div class="flex justify-between text-xs font-bold mb-1.5">
+            <span class="text-gray-700 dark:text-gray-200">Planned: <span id="totalMins" class="text-wolvesNavy dark:text-amber-400 font-extrabold">0</span> mins</span>
+            <span id="durationStatus" class="text-gray-500 dark:text-gray-400">Target: 90 mins</span>
+          </div>
+          <div class="w-full bg-gray-200/80 dark:bg-gray-700 rounded-full h-3 overflow-hidden shadow-inner p-0.5">
+            <div id="durationBar" class="bg-wolvesNavy dark:bg-wolvesGold h-full rounded-full transition-all duration-300 shadow-xs" style="width: 0%"></div>
+          </div>
+        </div>
+
+        <!-- Drop Zone Control Header -->
+        <div class="flex justify-between items-center mb-4 no-print">
+          <div class="flex items-center gap-2.5">
+            <h3 class="font-extrabold text-wolvesNavy dark:text-amber-400 text-base">Session Timeline</h3>
+            <span class="text-xs bg-amber-100/80 dark:bg-amber-900/40 text-amber-900 dark:text-amber-300 font-extrabold px-3 py-1 rounded-full border border-amber-300/50 dark:border-amber-700/50" id="drillCountBadge">0 Drills</span>
+          </div>
+          <button onclick="addNewSection()" class="text-xs bg-wolvesGold hover:bg-amber-400 text-wolvesNavy font-bold px-3.5 py-1.5 rounded-lg shadow-xs transition-all active:scale-95 flex items-center gap-1">
+            ➕ Add Section
+          </button>
+        </div>
+
+        <!-- Dynamic Multi-Section Drop Container -->
+        <div id="sectionsContainer" class="flex flex-col gap-5 flex-1 min-h-[300px]">
+          <!-- Populated by renderSessionPlan() -->
+        </div>
+
+        <!-- Notes Footer Area -->
+        <div class="mt-6 pt-4 border-t border-gray-200/80 dark:border-gray-700/80">
+          <label class="block text-xs font-bold text-gray-700 dark:text-gray-300 mb-1.5">Coach Notes / Focus Points & Task Constraints</label>
+          <textarea id="coachNotes" onchange="autoSaveSessionState()" placeholder="Session intentions, key environmental constraints, visual cues, or team announcements..." class="w-full text-xs p-3 border border-gray-200/80 dark:border-gray-600/80 rounded-xl bg-gray-50/80 dark:bg-gray-700/80 dark:text-white focus:ring-2 focus:ring-wolvesGold/50 focus:outline-none resize-none transition-all leading-relaxed" rows="2.5"></textarea>
+        </div>
+
+      </div>
+    </section>
+  </main>
+
+  <!-- STARTUP COACH IDENTIFICATION MODAL -->
+  <div id="coachIdentifyModal" class="fixed inset-0 bg-black/70 backdrop-blur-xs z-50 flex items-start justify-center p-4 pt-12 sm:pt-16">
+    <div class="bg-white dark:bg-gray-800 rounded-2xl max-w-md w-full overflow-hidden shadow-2xl border border-wolvesGold/40">
+      <div class="p-4 bg-wolvesNavy text-white flex justify-between items-center border-b border-wolvesGold/30">
+        <h3 class="font-bold text-sm sm:text-base flex items-center gap-2">
+          <span>🏀</span> Welcome! Identify Yourself
+        </h3>
+      </div>
+      <form onsubmit="confirmCoachIdentity(event)" class="p-5 flex flex-col gap-4">
+        <p class="text-xs text-gray-600 dark:text-gray-300 leading-relaxed">
+          Please select your coach profile to continue. You will be able to edit and manage drills created by you.
+        </p>
+        <div>
+          <label for="coachIdentitySelect" class="block text-xs font-bold text-gray-700 dark:text-gray-300 mb-1.5">
+            Select Your Name *
+          </label>
+          <select id="coachIdentitySelect" required class="w-full text-xs sm:text-sm border border-gray-300 dark:border-gray-600 rounded-xl p-2.5 bg-gray-50 dark:bg-gray-700 dark:text-white focus:ring-2 focus:ring-wolvesGold/50 focus:outline-none font-semibold">
+            <option value="James Brough">James Brough</option>
+            <option value="James Turner">James Turner</option>
+            <option value="Ikechukwu Benjamin">Ikechukwu Benjamin</option>
+            <option value="Jason Shakespeare">Jason Shakespeare</option>
+            <option value="Other Coach">Other Coach</option>
+          </select>
+        </div>
+        <div class="flex justify-end pt-2 border-t dark:border-gray-700">
+          <button type="submit" class="w-full py-2.5 bg-wolvesGold hover:bg-amber-400 text-wolvesNavy font-bold text-xs sm:text-sm rounded-xl shadow-md transition-all active:scale-95 flex items-center justify-center gap-1.5">
+            <span>🚀</span> Confirm & Enter Planner
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- CUSTOM ADMIN PASSWORD LOGIN MODAL -->
+  <div id="adminPasswordModal" class="fixed inset-0 bg-black/70 backdrop-blur-xs z-50 hidden flex items-center justify-center p-4">
+    <div class="bg-white dark:bg-gray-800 rounded-2xl max-w-sm w-full overflow-hidden shadow-2xl border border-gray-200 dark:border-gray-700">
+      <div class="p-4 bg-wolvesNavy text-white flex justify-between items-center">
+        <h3 class="font-bold text-sm flex items-center gap-1.5">🔒 Admin Access Required</h3>
+        <button onclick="closeAdminPasswordModal()" class="text-gray-300 hover:text-white font-bold text-lg">&times;</button>
+      </div>
+      <form onsubmit="handleAdminLoginSubmit(event)" class="p-5 flex flex-col gap-3.5">
+        <p class="text-xs text-gray-600 dark:text-gray-300 leading-relaxed">Enter the admin password to unlock edit/delete privileges for all drills.</p>
+        <div>
+          <label for="adminPasswordInput" class="block text-xs font-bold text-gray-700 dark:text-gray-300 mb-1">Password</label>
+          <input type="password" id="adminPasswordInput" placeholder="Enter password" class="w-full text-xs sm:text-sm border border-gray-300 dark:border-gray-600 rounded-xl p-2.5 bg-gray-50 dark:bg-gray-700 dark:text-white focus:ring-2 focus:ring-wolvesGold/50 focus:outline-none">
+          <p id="adminPasswordError" class="text-[11px] text-red-500 font-semibold mt-1.5 hidden">⚠️ Incorrect password. Please try again.</p>
+        </div>
+        <div class="flex justify-end gap-2 pt-2 border-t dark:border-gray-700">
+          <button type="button" onclick="closeAdminPasswordModal()" class="px-3 py-1.5 bg-gray-200 dark:bg-gray-700 dark:text-gray-300 hover:bg-gray-300 text-xs font-medium rounded-lg">Cancel</button>
+          <button type="submit" class="px-4 py-1.5 bg-amber-600 hover:bg-amber-500 text-white font-bold text-xs rounded-lg shadow-xs">Unlock Admin</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- CUSTOM CONFIRMATION MODAL -->
+  <div id="confirmModal" class="fixed inset-0 bg-black/70 backdrop-blur-xs z-50 hidden flex items-center justify-center p-4">
+    <div class="bg-white dark:bg-gray-800 rounded-2xl max-w-sm w-full overflow-hidden shadow-2xl border border-gray-200 dark:border-gray-700">
+      <div class="p-4 bg-wolvesNavy text-white flex justify-between items-center">
+        <h3 id="confirmModalTitle" class="font-bold text-sm">Confirmation</h3>
+        <button onclick="closeConfirmModal(false)" class="text-gray-300 hover:text-white font-bold text-lg">&times;</button>
+      </div>
+      <div class="p-5 flex flex-col gap-4">
+        <p id="confirmModalMessage" class="text-xs sm:text-sm text-gray-700 dark:text-gray-300">Are you sure?</p>
+        <div class="flex justify-end gap-2">
+          <button onclick="closeConfirmModal(false)" class="px-3 py-1.5 bg-gray-200 dark:bg-gray-700 dark:text-gray-300 hover:bg-gray-300 text-xs font-medium rounded-lg">Cancel</button>
+          <button id="confirmModalActionBtn" onclick="closeConfirmModal(true)" class="px-4 py-1.5 bg-red-600 hover:bg-red-500 text-white font-bold text-xs rounded-lg shadow-xs">Confirm</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- HYBRID EXPORT MODAL -->
+  <div id="exportModal" class="fixed inset-0 bg-black/70 backdrop-blur-xs z-50 hidden flex items-center justify-center p-4">
+    <div class="bg-white dark:bg-gray-800 rounded-2xl max-w-md w-full overflow-hidden shadow-2xl border border-gray-200 dark:border-gray-700">
+      <div class="p-4 bg-wolvesNavy text-white flex justify-between items-center">
+        <h3 class="font-bold text-sm">Hybrid Export & Share Options</h3>
+        <button onclick="closeExportModal()" class="text-gray-300 hover:text-white font-bold text-lg">&times;</button>
+      </div>
+      <div class="p-5 flex flex-col gap-3 max-h-[80vh] overflow-y-auto">
+        
+        <button onclick="closeExportModal(); exportToPDF();" class="flex items-center justify-between p-3.5 rounded-xl border border-gray-200 dark:border-gray-700 hover:border-wolvesGold hover:bg-amber-50/60 dark:hover:bg-gray-700/60 transition-all group text-left shadow-2xs">
+          <div class="flex items-center gap-3">
+            <span class="text-2xl">📄</span>
+            <div>
+              <h4 class="font-bold text-xs sm:text-sm text-gray-800 dark:text-gray-100 group-hover:text-amber-600 dark:group-hover:text-amber-400">PDF Landscape Document</h4>
+              <p class="text-[11px] text-gray-500 dark:text-gray-400">Formatted courtside PDF export with logos and headers</p>
+            </div>
+          </div>
+          <span class="text-xs font-bold text-wolvesNavy dark:text-wolvesGold">Generate →</span>
+        </button>
+
+        <!-- IMAGE EXPORT OPTIONS (PNG / JPEG) -->
+        <div class="p-3 bg-amber-50/50 dark:bg-amber-950/20 rounded-xl border border-amber-200 dark:border-amber-800/50 flex flex-col gap-2">
+          <span class="text-xs font-bold text-wolvesNavy dark:text-amber-400 flex items-center gap-1.5">
+            🖼️ Image Export Options (PNG / JPEG)
+          </span>
+          <div class="grid grid-cols-2 gap-2">
+            <button onclick="closeExportModal(); exportImage('full', 'png');" class="py-2 px-3 bg-white dark:bg-gray-700 hover:bg-amber-100 dark:hover:bg-gray-600 text-gray-800 dark:text-gray-100 border border-gray-200 dark:border-gray-600 rounded-lg text-xs font-bold flex flex-col items-center gap-0.5 transition-all shadow-2xs">
+              <span>📜 Full Plan (PNG)</span>
+              <span class="text-[10px] text-gray-500 dark:text-gray-400 font-normal">Condensed 1 image</span>
+            </button>
+            <button onclick="closeExportModal(); exportImage('full', 'jpeg');" class="py-2 px-3 bg-white dark:bg-gray-700 hover:bg-amber-100 dark:hover:bg-gray-600 text-gray-800 dark:text-gray-100 border border-gray-200 dark:border-gray-600 rounded-lg text-xs font-bold flex flex-col items-center gap-0.5 transition-all shadow-2xs">
+              <span>📸 Full Plan (JPEG)</span>
+              <span class="text-[10px] text-gray-500 dark:text-gray-400 font-normal">Condensed 1 image</span>
+            </button>
+            <button onclick="closeExportModal(); exportImage('sections', 'png');" class="py-2 px-3 bg-white dark:bg-gray-700 hover:bg-amber-100 dark:hover:bg-gray-600 text-gray-800 dark:text-gray-100 border border-gray-200 dark:border-gray-600 rounded-lg text-xs font-bold flex flex-col items-center gap-0.5 transition-all shadow-2xs">
+              <span>🧩 Sections (PNG)</span>
+              <span class="text-[10px] text-gray-500 dark:text-gray-400 font-normal">1 image per section</span>
+            </button>
+            <button onclick="closeExportModal(); exportImage('sections', 'jpeg');" class="py-2 px-3 bg-white dark:bg-gray-700 hover:bg-amber-100 dark:hover:bg-gray-600 text-gray-800 dark:text-gray-100 border border-gray-200 dark:border-gray-600 rounded-lg text-xs font-bold flex flex-col items-center gap-0.5 transition-all shadow-2xs">
+              <span>🖼️ Sections (JPEG)</span>
+              <span class="text-[10px] text-gray-500 dark:text-gray-400 font-normal">1 image per section</span>
+            </button>
+          </div>
+        </div>
+
+        <button onclick="copyTextPlanToClipboard()" class="flex items-center justify-between p-3.5 rounded-xl border border-gray-200 dark:border-gray-700 hover:border-emerald-500 hover:bg-emerald-50/60 dark:hover:bg-gray-700/60 transition-all group text-left shadow-2xs">
+          <div class="flex items-center gap-3">
+            <span class="text-2xl">📱</span>
+            <div>
+              <h4 class="font-bold text-xs sm:text-sm text-gray-800 dark:text-gray-100 group-hover:text-emerald-600 dark:group-hover:text-emerald-400">Copy Text Outline (WhatsApp)</h4>
+              <p class="text-[11px] text-gray-500 dark:text-gray-400">Quick text plan ready to paste into coach or team messaging</p>
+            </div>
+          </div>
+          <span class="text-xs font-bold text-emerald-600 dark:text-emerald-400">Copy →</span>
+        </button>
+
+        <button onclick="exportSessionJSON()" class="flex items-center justify-between p-3.5 rounded-xl border border-gray-200 dark:border-gray-700 hover:border-blue-500 hover:bg-blue-50/60 dark:hover:bg-gray-700/60 transition-all group text-left shadow-2xs">
+          <div class="flex items-center gap-3">
+            <span class="text-2xl">💾</span>
+            <div>
+              <h4 class="font-bold text-xs sm:text-sm text-gray-800 dark:text-gray-100 group-hover:text-blue-600 dark:group-hover:text-blue-400">Save Session Data (.json)</h4>
+              <p class="text-[11px] text-gray-500 dark:text-gray-400">Export plan file to save on device or share with another coach</p>
+            </div>
+          </div>
+          <span class="text-xs font-bold text-blue-600 dark:text-blue-400">Save →</span>
+        </button>
+
+        <label class="flex items-center justify-between p-3.5 rounded-xl border border-gray-200 dark:border-gray-700 hover:border-purple-500 hover:bg-purple-50/60 dark:hover:bg-gray-700/60 transition-all group cursor-pointer text-left shadow-2xs">
+          <div class="flex items-center gap-3">
+            <span class="text-2xl">📂</span>
+            <div>
+              <h4 class="font-bold text-xs sm:text-sm text-gray-800 dark:text-gray-100 group-hover:text-purple-600 dark:group-hover:text-purple-400">Load Session Plan (.json)</h4>
+              <p class="text-[11px] text-gray-500 dark:text-gray-400">Import a saved session JSON backup file into the app</p>
+            </div>
+          </div>
+          <span class="text-xs font-bold text-purple-600 dark:text-purple-400">Load →</span>
+          <input type="file" accept=".json" onchange="importSessionJSON(event)" class="hidden">
+        </label>
+
+        <button onclick="closeExportModal(); window.print();" class="flex items-center justify-between p-3.5 rounded-xl border border-gray-200 dark:border-gray-700 hover:border-gray-500 hover:bg-gray-100 dark:hover:bg-gray-700/60 transition-all group text-left shadow-2xs">
+          <div class="flex items-center gap-3">
+            <span class="text-2xl">🖨️</span>
+            <div>
+              <h4 class="font-bold text-xs sm:text-sm text-gray-800 dark:text-gray-100 group-hover:text-gray-700 dark:group-hover:text-gray-300">Native Browser Print</h4>
+              <p class="text-[11px] text-gray-500 dark:text-gray-400">Print directly to physical printer using native browser menu</p>
+            </div>
+          </div>
+          <span class="text-xs font-bold text-gray-600 dark:text-gray-400">Print →</span>
+        </button>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- ADD / EDIT DRILL MODAL (MULTI-CATEGORY CHECKBOXES) -->
+  <div id="addDrillModal" class="fixed inset-0 bg-black/70 backdrop-blur-xs z-50 hidden flex items-center justify-center p-4">
+    <div class="bg-white dark:bg-gray-800 rounded-2xl max-w-lg w-full overflow-hidden shadow-2xl border border-gray-200 dark:border-gray-700">
+      <div class="p-4 bg-wolvesNavy text-white flex justify-between items-center">
+        <h3 id="modalFormTitle" class="font-bold text-sm">Add Custom Basketball Drill</h3>
+        <button onclick="closeAddDrillModal()" class="text-gray-300 hover:text-white font-bold text-lg">&times;</button>
+      </div>
+      <form id="addDrillForm" onsubmit="handleCreateOrUpdateDrill(event)" class="p-4 sm:p-5 flex flex-col gap-3.5 text-xs">
+        <input type="hidden" id="editingDrillId" value="">
+        <div>
+          <label class="block font-bold text-gray-700 dark:text-gray-300 mb-1">Drill Title *</label>
+          <input type="text" id="newDrillTitle" required placeholder="e.g. 3v3 Drive & Kick Constraint SSG" class="w-full border border-gray-300 dark:border-gray-600 p-2.5 rounded-xl dark:bg-gray-700 dark:text-white focus:ring-2 focus:ring-wolvesGold/50 focus:outline-none">
+        </div>
+        
+        <!-- Multi-Category Checkbox Selector -->
+        <div>
+          <label class="block font-bold text-gray-700 dark:text-gray-300 mb-1">Categories (Select all that apply) *</label>
+          <div id="categoryCheckboxContainer" class="grid grid-cols-2 sm:grid-cols-3 gap-2 bg-gray-50 dark:bg-gray-700/60 p-3 rounded-xl border border-gray-200 dark:border-gray-600">
+            <!-- Dynamically injected via renderCategoryCheckboxes() -->
+          </div>
+          <p id="categoryCheckboxError" class="text-[11px] text-red-500 font-semibold mt-1 hidden">⚠️ Select at least one category.</p>
+        </div>
+
+        <div>
+          <label class="block font-bold text-gray-700 dark:text-gray-300 mb-1">Duration (Mins) *</label>
+          <input type="number" id="newDrillDuration" required value="10" min="1" class="w-full border border-gray-300 dark:border-gray-600 p-2.5 rounded-xl dark:bg-gray-700 dark:text-white focus:ring-2 focus:ring-wolvesGold/50 focus:outline-none">
+        </div>
+
+        <div>
+          <label class="block font-bold text-gray-700 dark:text-gray-300 mb-1">Description / Task Constraints & Coaching Points *</label>
+          <textarea id="newDrillSummary" required rows="3" placeholder="Explain the rules, constraints, visual cues, court setup, and affordances..." class="w-full border border-gray-300 dark:border-gray-600 p-2.5 rounded-xl dark:bg-gray-700 dark:text-white focus:ring-2 focus:ring-wolvesGold/50 focus:outline-none resize-none leading-relaxed"></textarea>
+        </div>
+        <div>
+          <label class="block font-bold text-gray-700 dark:text-gray-300 mb-1">Video Link (YouTube URL or Instagram Post/Reel Link)</label>
+          <input type="url" id="newDrillUrl" placeholder="https://www.youtube.com/watch?v=... or https://www.instagram.com/reel/..." class="w-full border border-gray-300 dark:border-gray-600 p-2.5 rounded-xl dark:bg-gray-700 dark:text-white focus:ring-2 focus:ring-wolvesGold/50 focus:outline-none">
+        </div>
+        <div>
+          <label class="block font-bold text-gray-700 dark:text-gray-300 mb-1">Creator Coach *</label>
+          <select id="newDrillAuthor" class="w-full border border-gray-300 dark:border-gray-600 p-2.5 rounded-xl dark:bg-gray-700 dark:text-white focus:ring-2 focus:ring-wolvesGold/50 focus:outline-none font-semibold">
+            <option value="James Brough">James Brough</option>
+            <option value="James Turner">James Turner</option>
+            <option value="Ikechukwu Benjamin">Ikechukwu Benjamin</option>
+            <option value="Jason Shakespeare">Jason Shakespeare</option>
+            <option value="Other Coach">Other Coach</option>
+            <option value="Transforming Basketball">Transforming Basketball</option>
+          </select>
+        </div>
+        <div class="flex justify-end gap-2 pt-3 border-t dark:border-gray-700">
+          <button type="button" onclick="closeAddDrillModal()" class="px-3.5 py-2 bg-gray-200 dark:bg-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600 rounded-xl font-medium transition-all">Cancel</button>
+          <button type="submit" id="saveDrillBtn" class="px-4 py-2 bg-wolvesNavy hover:bg-wolvesAccent dark:bg-wolvesGold dark:text-wolvesNavy dark:hover:bg-amber-400 text-white font-bold rounded-xl shadow-xs transition-all active:scale-95">Save & Backup</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- GOOGLE SHEETS SETTINGS MODAL -->
+  <div id="settingsModal" class="fixed inset-0 bg-black/70 backdrop-blur-xs z-50 hidden flex items-center justify-center p-4">
+    <div class="bg-white dark:bg-gray-800 rounded-2xl max-w-md w-full overflow-hidden shadow-2xl border border-gray-200 dark:border-gray-700">
+      <div class="p-4 bg-wolvesNavy text-white flex justify-between items-center">
+        <h3 class="font-bold text-sm">Google Sheets Sync Setup</h3>
+        <button onclick="closeSettingsModal()" class="text-gray-300 hover:text-white font-bold text-lg">&times;</button>
+      </div>
+      <div class="p-5 flex flex-col gap-3.5 text-xs">
+        <p class="text-gray-600 dark:text-gray-300 leading-relaxed">Google Apps Script Web App URL used for syncing custom drills across all coaches:</p>
+        <div>
+          <label class="block font-bold text-gray-700 dark:text-gray-300 mb-1">Google Web App URL</label>
+          <input type="url" id="googleAppScriptUrl" placeholder="https://script.google.com/macros/s/.../exec" class="w-full border border-gray-300 dark:border-gray-600 p-2.5 rounded-xl dark:bg-gray-700 dark:text-white focus:ring-2 focus:ring-wolvesGold/50 focus:outline-none">
+        </div>
+        <div class="flex justify-end gap-2 pt-2 border-t dark:border-gray-700">
+          <button onclick="saveSettings()" class="px-4 py-2 bg-wolvesNavy dark:bg-wolvesGold dark:text-wolvesNavy text-white font-bold rounded-xl shadow-xs">Save Config</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- VIDEO PREVIEW MODAL -->
+  <div id="videoModal" class="fixed inset-0 bg-black/75 backdrop-blur-xs z-50 hidden flex items-center justify-center p-3 sm:p-4">
+    <div class="bg-white dark:bg-gray-800 rounded-2xl max-w-2xl w-full overflow-hidden shadow-2xl border border-gray-200 dark:border-gray-700">
+      <div class="p-3.5 bg-wolvesNavy text-white flex justify-between items-center">
+        <h3 id="modalTitle" class="font-bold text-xs sm:text-sm truncate max-w-[250px] sm:max-w-none">Drill Video Preview</h3>
+        <div class="flex items-center gap-2">
+          <a id="externalVideoBtn" href="#" target="_blank" rel="noopener noreferrer" class="text-xs bg-amber-500 hover:bg-amber-400 text-wolvesNavy font-bold px-2.5 py-1 rounded-lg transition-all hidden">
+            ↗ Open External
+          </a>
+          <button onclick="closeVideoModal()" class="text-gray-300 hover:text-white font-bold px-2 text-lg">&times;</button>
+        </div>
+      </div>
+      <div class="relative min-h-[300px] sm:min-h-[380px] max-h-[80vh] overflow-y-auto bg-black flex items-center justify-center p-2" id="modalVideoContainer">
+        <!-- Embedded video content loaded here -->
+      </div>
+    </div>
+  </div>
+
+  <!-- TOAST NOTIFICATION SYSTEM -->
+  <div id="toastNotification" class="fixed bottom-5 right-5 z-50 transform translate-y-24 opacity-0 transition-all duration-300 pointer-events-none">
+    <div class="bg-wolvesNavy/95 backdrop-blur-md text-white border-l-4 border-wolvesGold px-4 py-3 rounded-xl shadow-2xl flex items-center gap-3 max-w-md border border-wolvesGold/20">
+      <span id="toastIcon" class="text-lg">ℹ️</span>
+      <p id="toastMessage" class="text-xs font-semibold text-gray-100"></p>
+    </div>
+  </div>
+
+  <script>
+    // --- DEFAULT CONFIGURATION & AUTH STATE ---
+    const DEFAULT_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxQu77z8Ir2jbaFxBpDUPwDX09O9zEtTCxTqevAakRACXab7Cvfe3vLTXKBFIPaH18/exec";
+    const ADMIN_PASSWORD = "wolveson3";
+    let isAdminMode = false;
+    let currentActiveCoach = ""; // Stores coach identified on startup
+    let currentMobileView = "library"; // 'library' | 'plan'
+
+    // --- LOGO ASSETS ---
+    const LOGO_PRIMARY = "wolves logo jpgs-02.jpg";
+    const LOGO_NBL = "gold_wolves_logo.png";
+
+    // --- DRILL DATABASE & FILTERS ---
+    const drillCategories = ["Warm Up", "Offensive", "Defensive", "Skill Based", "Transition", "Mentality"];
+    let currentCategory = "Warm Up";
+    let currentCreatorFilter = "ALL";
+
+    // Transforming Basketball Default Drills
+    let defaultDrills = [
+      {
+        id: "cla_1",
+        title: "1v1 Continuous Tag & Advantage SSG",
+        categories: ["Warm Up", "Transition"],
+        defaultDuration: 10,
+        summary: "Warm-up: 1v1 play in a marked zone. Upon tag or whistle, tagged player transitions immediately into defense against a trailing attacker. Constrains spatial decision-making, raises visual scanning, and warms up the body dynamically without static movement patterns.",
+        mediaUrl: "",
+        createdBy: "Transforming Basketball"
+      },
+      {
+        id: "cla_2",
+        title: "2v1 Plus 1 Drive & Kick SSG",
+        categories: ["Offensive", "Skill Based"],
+        defaultDuration: 12,
+        summary: "Task constraint: Offense starts with an initial advantage (defender trailing or baseline recovery). Offense must score within 3 dribbles or find the kick-out before the late helper recovers. Encourages perceiving open paint gaps and perceptual-motor decision making.",
+        mediaUrl: "",
+        createdBy: "Transforming Basketball"
+      },
+      {
+        id: "cla_3",
+        title: "3v3 Scramble & Closeout Matchup",
+        categories: ["Defensive", "Transition"],
+        defaultDuration: 15,
+        summary: "Constraint: Defensive players start randomly positioned on the key while ball starts on perimeter. On coach pass, defenders must dynamically communicate, prioritize the rim and immediate ball threat, and solve scrambling situations in unstructured chaos.",
+        mediaUrl: "",
+        createdBy: "Transforming Basketball"
+      },
+      {
+        id: "cla_4",
+        title: "1v1 Rim Attack with Heavy Contact Pad",
+        categories: ["Skill Based", "Offensive"],
+        defaultDuration: 10,
+        summary: "Constraint: Attacker starts on elbow with defender riding hip using a foam pad. Attacker must read defender's angle and exploit affordances (e.g. change of pace, wrong-foot finishes). No predetermined moves allowed.",
+        mediaUrl: "",
+        createdBy: "James Brough"
+      },
+      {
+        id: "cla_5",
+        title: "3v2 Continuous Advantage Transition",
+        categories: ["Transition", "Offensive", "Defensive"],
+        defaultDuration: 15,
+        summary: "Continuous 3v2 advantage. Task constraint: The player who takes the shot or turns the ball over must sprint to touch the sideline before returning to defense, creating a momentary dynamic numerical advantage.",
+        mediaUrl: "",
+        createdBy: "Transforming Basketball"
+      },
+      {
+        id: "cla_6",
+        title: "Chaos Rebounding 2v2 Glass Battle",
+        categories: ["Mentality", "Defensive", "Warm Up"],
+        defaultDuration: 10,
+        summary: "2v2 small-sided rebound battle. Coach shoots unpredictably off glass/rim. Constraint: Box out target must clear ball outside 3pt line while defense earns points for contested chinning/clearing. Builds resilience and high-intensity motor solutions.",
+        mediaUrl: "",
+        createdBy: "James Brough"
+      }
+    ];
+
+    let drills = [];
+
+    // --- HELPER: GET CATEGORIES ARRAY FROM DRILL OBJECT ---
+    function getDrillCategories(drill) {
+      if (Array.isArray(drill.categories) && drill.categories.length > 0) {
+        return drill.categories;
+      }
+      if (typeof drill.category === 'string' && drill.category.trim() !== '') {
+        return drill.category.split(',').map(s => s.trim()).filter(Boolean);
+      }
+      if (drill.isPlaceholder) {
+        return ["Custom Note"];
+      }
+      return ["Warm Up"];
+    }
+
+    // --- TIMELINE SECTIONS DATA MODEL ---
+    let timelineSections = [
+      { id: "sec_1", title: "Section 1: Warm Up & Activation", items: [] },
+      { id: "sec_2", title: "Section 2: Main Content", items: [] },
+      { id: "sec_3", title: "Section 3: Game Based Application", items: [] },
+      { id: "sec_4", title: "Section 4: Cool Down & Reflection", items: [] }
+    ];
+
+    // --- INITIALIZATION ---
+    window.addEventListener('DOMContentLoaded', () => {
+      document.getElementById('sessionDate').valueAsDate = new Date();
+      updateThemeToggleUI();
+      initializeDrillLibrary();
+      restoreSavedSessionState();
+      updateCreatorFilterOptions();
+      renderCategoryTabs();
+      renderCategoryCheckboxes();
+      renderSessionPlan();
+      updateTeamBranding();
+      
+      const activeUrl = getScriptUrl();
+      document.getElementById('googleAppScriptUrl').value = activeUrl;
+      fetchSheetDrills();
+
+      // Open startup coach identity modal
+      openCoachIdentifyModal();
+    });
+
+    // --- MOBILE TAB SWITCHER LOGIC ---
+    function switchMobileTab(view) {
+      currentMobileView = view;
+      const libSec = document.getElementById('drillLibrarySection');
+      const planSec = document.getElementById('sessionPlanSection');
+      const btnLib = document.getElementById('mobileTabLibrary');
+      const btnPlan = document.getElementById('mobileTabPlan');
+
+      if (view === 'library') {
+        libSec.classList.remove('mobile-hide');
+        planSec.classList.add('mobile-hide');
+        btnLib.className = "flex-1 py-2.5 px-3 rounded-xl text-xs font-bold transition-all shadow-xs flex items-center justify-center gap-1.5 bg-wolvesNavy text-white dark:bg-wolvesGold dark:text-wolvesNavy border border-transparent";
+        btnPlan.className = "flex-1 py-2.5 px-3 rounded-xl text-xs font-bold transition-all shadow-xs flex items-center justify-center gap-1.5 bg-white text-gray-700 dark:bg-gray-800 dark:text-gray-200 border border-gray-200 dark:border-gray-700";
+      } else {
+        libSec.classList.add('mobile-hide');
+        planSec.classList.remove('mobile-hide');
+        btnLib.className = "flex-1 py-2.5 px-3 rounded-xl text-xs font-bold transition-all shadow-xs flex items-center justify-center gap-1.5 bg-white text-gray-700 dark:bg-gray-800 dark:text-gray-200 border border-gray-200 dark:border-gray-700";
+        btnPlan.className = "flex-1 py-2.5 px-3 rounded-xl text-xs font-bold transition-all shadow-xs flex items-center justify-center gap-1.5 bg-wolvesNavy text-white dark:bg-wolvesGold dark:text-wolvesNavy border border-transparent";
+      }
+    }
+
+    // --- COACH IDENTIFICATION HANDLERS ---
+    function openCoachIdentifyModal() {
+      const modal = document.getElementById('coachIdentifyModal');
+      const select = document.getElementById('coachIdentitySelect');
+      if (currentActiveCoach) {
+        select.value = currentActiveCoach;
+      }
+      modal.classList.remove('hidden');
+    }
+
+    function confirmCoachIdentity(e) {
+      e.preventDefault();
+      const selectedCoach = document.getElementById('coachIdentitySelect').value;
+      setCoachIdentity(selectedCoach);
+      document.getElementById('coachIdentifyModal').classList.add('hidden');
+      showToast(`Welcome back, Coach ${selectedCoach}!`, "success");
+    }
+
+    function setCoachIdentity(coachName) {
+      currentActiveCoach = coachName;
+      document.getElementById('headerCoachName').innerText = coachName;
+      document.getElementById('coachSelect').value = coachName;
+      document.getElementById('newDrillAuthor').value = coachName;
+      autoSaveSessionState();
+      renderDrillBank();
+    }
+
+    function handleCoachSelectChange(coachName) {
+      currentActiveCoach = coachName;
+      document.getElementById('headerCoachName').innerText = coachName;
+      document.getElementById('newDrillAuthor').value = coachName;
+      autoSaveSessionState();
+      renderDrillBank();
+      showToast(`Active Coach switched to ${coachName}`, "info");
+    }
+
+    // --- PERMISSIONS LOGIC ---
+    function canEditDrill(drill) {
+      if (isAdminMode) return true;
+      if (!currentActiveCoach || currentActiveCoach === "Other Coach") return false;
+      return (drill.createdBy || 'Transforming Basketball') === currentActiveCoach;
+    }
+
+    // --- TOAST NOTIFICATIONS ---
+    function showToast(message, type = "info") {
+      const toast = document.getElementById('toastNotification');
+      const msgEl = document.getElementById('toastMessage');
+      const iconEl = document.getElementById('toastIcon');
+
+      msgEl.innerText = message;
+      if (type === "success") iconEl.innerText = "✅";
+      else if (type === "error") iconEl.innerText = "⚠️";
+      else iconEl.innerText = "ℹ️";
+
+      toast.classList.remove('translate-y-24', 'opacity-0');
+      toast.classList.add('translate-y-0', 'opacity-100');
+
+      setTimeout(() => {
+        toast.classList.remove('translate-y-0', 'opacity-100');
+        toast.classList.add('translate-y-24', 'opacity-0');
+      }, 3500);
+    }
+
+    // --- CUSTOM CONFIRMATION MODAL HELPER ---
+    let onConfirmCallback = null;
+
+    function showConfirmDialog(title, message, confirmBtnText, actionCallback) {
+      document.getElementById('confirmModalTitle').innerText = title;
+      document.getElementById('confirmModalMessage').innerText = message;
+      const actionBtn = document.getElementById('confirmModalActionBtn');
+      actionBtn.innerText = confirmBtnText || "Confirm";
+      onConfirmCallback = actionCallback;
+      document.getElementById('confirmModal').classList.remove('hidden');
+    }
+
+    function closeConfirmModal(confirmed) {
+      document.getElementById('confirmModal').classList.add('hidden');
+      if (confirmed && typeof onConfirmCallback === 'function') {
+        onConfirmCallback();
+      }
+      onConfirmCallback = null;
+    }
+
+    // --- LOCAL STORAGE AUTO-SAVE FOR SESSION ---
+    function autoSaveSessionState() {
+      const state = {
+        team: document.getElementById('teamSelect').value,
+        coach: document.getElementById('coachSelect').value || currentActiveCoach,
+        activeCoach: currentActiveCoach,
+        date: document.getElementById('sessionDate').value,
+        targetDuration: document.getElementById('targetDuration').value,
+        notes: document.getElementById('coachNotes').value,
+        sections: timelineSections
+      };
+      localStorage.setItem('wolves_active_session', JSON.stringify(state));
+    }
+
+    function restoreSavedSessionState() {
+      const saved = localStorage.getItem('wolves_active_session');
+      if (!saved) return;
+      try {
+        const state = JSON.parse(saved);
+        if (state.team) document.getElementById('teamSelect').value = state.team;
+        if (state.coach) document.getElementById('coachSelect').value = state.coach;
+        if (state.activeCoach) {
+          currentActiveCoach = state.activeCoach;
+          document.getElementById('headerCoachName').innerText = state.activeCoach;
+        }
+        if (state.date) document.getElementById('sessionDate').value = state.date;
+        if (state.targetDuration) document.getElementById('targetDuration').value = state.targetDuration;
+        if (state.notes) document.getElementById('coachNotes').value = state.notes;
+        if (Array.isArray(state.sections) && state.sections.length > 0) {
+          timelineSections = state.sections;
+        }
+      } catch (e) {
+        console.error("Error restoring session state", e);
+      }
+    }
+
+    // --- DARK MODE LOGIC ---
+    function toggleDarkMode() {
+      const isDark = document.documentElement.classList.toggle('dark');
+      localStorage.setItem('wolves_theme', isDark ? 'dark' : 'light');
+      updateThemeToggleUI();
+    }
+
+    function updateThemeToggleUI() {
+      const isDark = document.documentElement.classList.contains('dark');
+      const iconEl = document.getElementById('themeToggleIcon');
+      const textEl = document.getElementById('themeToggleText');
+      if (iconEl && textEl) {
+        iconEl.innerText = isDark ? '☀️' : '🌙';
+        textEl.innerText = isDark ? 'Light' : 'Dark';
+      }
+    }
+
+    function getScriptUrl() {
+      return localStorage.getItem('wolves_script_url') || DEFAULT_SCRIPT_URL;
+    }
+
+    // --- ADMIN MODE LOGIC ---
+    function toggleAdminMode() {
+      if (isAdminMode) {
+        exitAdminMode();
+      } else {
+        openAdminPasswordModal();
+      }
+    }
+
+    function openAdminPasswordModal() {
+      document.getElementById('adminPasswordInput').value = '';
+      document.getElementById('adminPasswordError').classList.add('hidden');
+      document.getElementById('adminPasswordModal').classList.remove('hidden');
+      setTimeout(() => document.getElementById('adminPasswordInput').focus(), 100);
+    }
+
+    function closeAdminPasswordModal() {
+      document.getElementById('adminPasswordModal').classList.add('hidden');
+    }
+
+    function handleAdminLoginSubmit(e) {
+      e.preventDefault();
+      const inputPass = document.getElementById('adminPasswordInput').value;
+      if (inputPass === ADMIN_PASSWORD) {
+        isAdminMode = true;
+        updateAdminUI();
+        closeAdminPasswordModal();
+        showToast("🔓 Admin Mode unlocked! All drills editable.", "success");
+      } else {
+        document.getElementById('adminPasswordError').classList.remove('hidden');
+      }
+    }
+
+    function exitAdminMode() {
+      isAdminMode = false;
+      updateAdminUI();
+      showToast("🔒 Admin Mode locked.", "info");
+    }
+
+    function updateAdminUI() {
+      const btn = document.getElementById('adminToggleBtn');
+      const banner = document.getElementById('adminBanner');
+
+      if (isAdminMode) {
+        btn.innerHTML = "🔓 Exit Admin";
+        btn.className = "text-xs bg-amber-500 text-wolvesNavy px-3 py-1.5 rounded-lg font-bold border border-amber-400 transition-all active:scale-95 flex items-center gap-1 shadow-xs";
+        banner.classList.remove('hidden');
+      } else {
+        btn.innerHTML = "🔒 Admin";
+        btn.className = "text-xs bg-amber-600/25 hover:bg-amber-600/40 text-amber-200 px-3 py-1.5 rounded-lg font-medium border border-amber-500/40 transition-all active:scale-95 flex items-center gap-1 shadow-2xs";
+        banner.classList.add('hidden');
+      }
+
+      renderDrillBank();
+    }
+
+    // --- BRANDING LOGIC ---
+    function updateTeamBranding() {
+      const selectedTeam = document.getElementById('teamSelect').value;
+      const isNBL = selectedTeam === "U14 NBL" || selectedTeam === "U16 NBL";
+      const targetLogo = isNBL ? LOGO_NBL : LOGO_PRIMARY;
+
+      document.getElementById('appHeaderLogo').src = targetLogo;
+    }
+
+    // --- LOCAL STORAGE MANAGEMENT ---
+    function initializeDrillLibrary() {
+      const storedOverrides = localStorage.getItem('wolves_drill_overrides');
+      if (storedOverrides) {
+        try {
+          drills = JSON.parse(storedOverrides);
+          return;
+        } catch(e) { console.error("Error loading overrides", e); }
+      }
+
+      drills = [...defaultDrills];
+      const customDrills = localStorage.getItem('wolves_custom_drills');
+      if (customDrills) {
+        try {
+          const parsed = JSON.parse(customDrills);
+          parsed.forEach(cd => {
+            if (!drills.find(d => d.id === cd.id)) drills.push(cd);
+          });
+        } catch(e) { console.error("Error loading custom drills", e); }
+      }
+    }
+
+    function saveDrillLibraryState() {
+      localStorage.setItem('wolves_drill_overrides', JSON.stringify(drills));
+    }
+
+    // --- GOOGLE SHEETS API SYNC ---
+    async function fetchSheetDrills() {
+      const url = getScriptUrl();
+      if (!url) return;
+
+      try {
+        const response = await fetch(url);
+        const data = await response.json();
+        if (Array.isArray(data)) {
+          data.forEach(sheetDrill => {
+            if (typeof sheetDrill.categories === 'string') {
+              sheetDrill.categories = sheetDrill.categories.split(',').map(s => s.trim()).filter(Boolean);
+            } else if (!Array.isArray(sheetDrill.categories) && sheetDrill.category) {
+              sheetDrill.categories = typeof sheetDrill.category === 'string'
+                ? sheetDrill.category.split(',').map(s => s.trim()).filter(Boolean)
+                : [sheetDrill.category];
+            } else if (!Array.isArray(sheetDrill.categories)) {
+              sheetDrill.categories = ["Warm Up"];
+            }
+
+            const existsIdx = drills.findIndex(d => d.id === sheetDrill.id);
+            if (existsIdx > -1) {
+              drills[existsIdx] = sheetDrill;
+            } else {
+              drills.push(sheetDrill);
+            }
+          });
+          saveDrillLibraryState();
+          updateCreatorFilterOptions();
+          renderDrillBank();
+        }
+      } catch (err) {
+        console.warn("Could not fetch remote drills from Google Sheet.", err);
+      }
+    }
+
+    // --- MULTI-CATEGORY CHECKBOX RENDERER FOR MODAL ---
+    function renderCategoryCheckboxes(selectedCategories = []) {
+      const container = document.getElementById('categoryCheckboxContainer');
+      container.innerHTML = drillCategories.map(cat => {
+        const isChecked = selectedCategories.includes(cat);
+        return `
+          <label class="flex items-center gap-2 cursor-pointer text-xs dark:text-gray-200 font-medium hover:text-wolvesGold transition-colors">
+            <input type="checkbox" name="drillCategoryCheckbox" value="${cat}" ${isChecked ? 'checked' : ''} class="rounded-md text-wolvesGold focus:ring-wolvesGold/50 dark:bg-gray-800 border-gray-300 dark:border-gray-600">
+            <span>${cat}</span>
+          </label>
+        `;
+      }).join('');
+    }
+
+    // --- DRILL CREATION & EDITING ---
+    function editDrill(drillId) {
+      const drill = drills.find(d => d.id === drillId);
+      if (!drill) return;
+
+      if (!canEditDrill(drill)) {
+        showToast(`Permission denied: Created by ${drill.createdBy}`, "error");
+        return;
+      }
+
+      document.getElementById('modalFormTitle').innerText = "Edit Basketball Drill";
+      document.getElementById('editingDrillId').value = drill.id;
+      document.getElementById('newDrillTitle').value = drill.title;
+      
+      const cats = getDrillCategories(drill);
+      renderCategoryCheckboxes(cats);
+
+      document.getElementById('newDrillDuration').value = drill.defaultDuration;
+      document.getElementById('newDrillSummary').value = drill.summary;
+      document.getElementById('newDrillUrl').value = drill.mediaUrl || '';
+      document.getElementById('newDrillAuthor').value = drill.createdBy || currentActiveCoach || 'Transforming Basketball';
+
+      openAddDrillModal();
+    }
+
+    function deleteDrill(drillId) {
+      const drill = drills.find(d => d.id === drillId);
+      if (!drill) return;
+
+      if (!canEditDrill(drill)) {
+        showToast(`Permission denied: Created by ${drill.createdBy}`, "error");
+        return;
+      }
+
+      showConfirmDialog(
+        "Delete Drill",
+        `Are you sure you want to delete "${drill.title}" from the drill library?`,
+        "Delete Drill",
+        () => {
+          drills = drills.filter(d => d.id !== drillId);
+          saveDrillLibraryState();
+          updateCreatorFilterOptions();
+          renderDrillBank();
+          showToast(`Deleted "${drill.title}"`, "info");
+        }
+      );
+    }
+
+    async function handleCreateOrUpdateDrill(e) {
+      e.preventDefault();
+      
+      const checkedBoxes = document.querySelectorAll('input[name="drillCategoryCheckbox"]:checked');
+      const selectedCats = Array.from(checkedBoxes).map(cb => cb.value);
+
+      if (selectedCats.length === 0) {
+        document.getElementById('categoryCheckboxError').classList.remove('hidden');
+        return;
+      }
+      document.getElementById('categoryCheckboxError').classList.add('hidden');
+
+      const editingId = document.getElementById('editingDrillId').value;
+      const btn = document.getElementById('saveDrillBtn');
+      btn.innerText = "Saving...";
+      btn.disabled = true;
+
+      const drillPayload = {
+        id: editingId ? editingId : ("custom_" + Date.now()),
+        title: document.getElementById('newDrillTitle').value,
+        categories: selectedCats,
+        category: selectedCats.join(', '),
+        defaultDuration: parseInt(document.getElementById('newDrillDuration').value) || 10,
+        summary: document.getElementById('newDrillSummary').value,
+        mediaUrl: document.getElementById('newDrillUrl').value,
+        createdBy: document.getElementById('newDrillAuthor').value || currentActiveCoach || 'Transforming Basketball'
+      };
+
+      if (editingId) {
+        const index = drills.findIndex(d => d.id === editingId);
+        if (index > -1) drills[index] = drillPayload;
+      } else {
+        drills.push(drillPayload);
+      }
+
+      saveDrillLibraryState();
+
+      const scriptUrl = getScriptUrl();
+      if (scriptUrl) {
+        try {
+          await fetch(scriptUrl, {
+            method: 'POST',
+            mode: 'no-cors',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(drillPayload)
+          });
+        } catch (err) {
+          console.error("Sheet sync error:", err);
+        }
+      }
+
+      btn.innerText = "Save & Backup";
+      btn.disabled = false;
+      closeAddDrillModal();
+      document.getElementById('addDrillForm').reset();
+      document.getElementById('editingDrillId').value = "";
+      
+      if (selectedCats.length > 0) {
+        setCategory(selectedCats[0]);
+      }
+      updateCreatorFilterOptions();
+      renderDrillBank();
+      showToast("Drill saved successfully!", "success");
+    }
+
+    // --- CREATOR FILTER MANAGEMENT ---
+    function updateCreatorFilterOptions() {
+      const select = document.getElementById('creatorFilterSelect');
+      if (!select) return;
+
+      const creators = Array.from(new Set(drills.map(d => d.createdBy || 'Transforming Basketball'))).sort();
+      const previousValue = currentCreatorFilter;
+
+      select.innerHTML = `
+        <option value="ALL">All Creators</option>
+        ${creators.map(c => `<option value="${c}">${c}</option>`).join('')}
+      `;
+
+      if (creators.includes(previousValue) || previousValue === "ALL") {
+        select.value = previousValue;
+      } else {
+        currentCreatorFilter = "ALL";
+        select.value = "ALL";
+      }
+    }
+
+    function setCreatorFilter(creator) {
+      currentCreatorFilter = creator;
+      renderDrillBank();
+    }
+
+    // --- UI RENDERING ---
+    function renderCategoryTabs() {
+      const container = document.getElementById('categoryTabs');
+      container.innerHTML = drillCategories.map(cat => `
+        <button onclick="setCategory('${cat}')" 
+          class="px-3 py-1.5 text-xs font-bold rounded-xl whitespace-nowrap transition-all active:scale-95 ${
+            currentCategory === cat 
+              ? 'bg-wolvesNavy text-white dark:bg-wolvesGold dark:text-wolvesNavy shadow-xs' 
+              : 'bg-gray-100/80 text-gray-600 dark:bg-gray-700/60 dark:text-gray-300 hover:bg-gray-200/80 dark:hover:bg-gray-600/80'
+          }">
+          ${cat}
+        </button>
+      `).join('');
+    }
+
+    function setCategory(cat) {
+      currentCategory = cat;
+      renderCategoryTabs();
+      renderDrillBank();
+    }
+
+    // --- MINIMISED TILE RENDERER WITH SMALL POP-UP CARD ON HOVER ---
+    function renderDrillBank() {
+      const bank = document.getElementById('drillBank');
+      const filtered = drills.filter(d => {
+        const cats = getDrillCategories(d);
+        const matchesCategory = cats.includes(currentCategory);
+        const matchesCreator = (currentCreatorFilter === "ALL") || ((d.createdBy || 'Transforming Basketball') === currentCreatorFilter);
+        return matchesCategory && matchesCreator;
+      });
+
+      if(filtered.length === 0) {
+        bank.innerHTML = `<div class="py-8 text-center text-xs text-gray-400 dark:text-gray-500 italic border-2 border-dashed border-gray-200 dark:border-gray-700 rounded-xl">No drills found matching this filter.</div>`;
+        return;
+      }
+
+      bank.innerHTML = filtered.map(drill => {
+        const cats = getDrillCategories(drill);
+        const badgesHtml = cats.map(c => `<span class="text-[9px] font-semibold tracking-wide bg-amber-50 dark:bg-amber-900/30 text-amber-800 dark:text-amber-300 border border-amber-200/60 dark:border-amber-700/50 px-2 py-0.5 rounded-md">${c}</span>`).join(' ');
+        const isEditable = canEditDrill(drill);
+
+        return `
+          <div draggable="true" ondragstart="dragFromBank(event, '${drill.id}')"
+               class="group relative bg-white dark:bg-gray-800/90 p-2.5 sm:p-3 rounded-xl border border-gray-200/80 dark:border-gray-700/80 shadow-2xs hover:border-wolvesGold/80 transition-all cursor-grab active:cursor-grabbing flex items-center justify-between gap-2">
+            
+            <!-- Minimised Compact Tile View (Default State) -->
+            <div class="flex items-center gap-2 min-w-0 flex-1">
+              <div class="flex flex-col min-w-0 flex-1">
+                <div class="flex items-center gap-1.5">
+                  <h4 class="font-bold text-xs sm:text-sm text-gray-800 dark:text-gray-100 truncate">${drill.title}</h4>
+                  ${drill.mediaUrl ? '<span class="text-[11px] shrink-0 text-blue-500 font-bold" title="Video available">🎥</span>' : ''}
+                </div>
+                <div class="flex items-center gap-2 text-[10px] text-gray-500 dark:text-gray-400 mt-0.5">
+                  <span class="truncate text-amber-700 dark:text-amber-400 font-semibold">✍️ ${drill.createdBy || 'Transforming Basketball'}</span>
+                  <span class="text-gray-300 dark:text-gray-600">•</span>
+                  <span class="truncate font-medium text-gray-600 dark:text-gray-300">${cats[0] || 'Warm Up'}</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="flex items-center gap-2 shrink-0">
+              <span class="text-[10px] font-bold bg-gray-100 dark:bg-gray-700/80 text-gray-700 dark:text-gray-300 px-2.5 py-1 rounded-full border border-gray-200/60 dark:border-gray-600/60">${drill.defaultDuration}m</span>
+              <button onclick="addDrillToSession('${drill.id}', '${timelineSections[0]?.id || ''}')" class="text-xs bg-wolvesNavy dark:bg-wolvesGold dark:text-wolvesNavy hover:bg-wolvesAccent dark:hover:bg-amber-400 text-white px-2.5 py-1 rounded-lg font-bold transition-all active:scale-95 shadow-2xs">
+                + Add
+              </button>
+            </div>
+
+            <!-- Small Floating Pop-Up Card (Appears smoothly on Hover) -->
+            <div class="absolute left-0 right-0 top-0 z-50 hidden group-hover:flex flex-col gap-2 p-3 bg-white dark:bg-gray-800 border-2 border-wolvesGold rounded-2xl drill-hover-card transition-all duration-150 pointer-events-auto">
+              <div class="flex justify-between items-start gap-2 border-b border-gray-100 dark:border-gray-700/60 pb-1.5">
+                <div class="min-w-0 flex-1">
+                  <h4 class="font-extrabold text-xs sm:text-sm text-wolvesNavy dark:text-amber-400 truncate">${drill.title}</h4>
+                  <span class="text-[10px] text-amber-700 dark:text-amber-400 font-semibold block">✍️ ${drill.createdBy || 'Transforming Basketball'}</span>
+                </div>
+                <span class="text-[10px] font-bold bg-amber-100 dark:bg-amber-900/60 text-amber-900 dark:text-amber-200 px-2 py-0.5 rounded-full border border-amber-300/60 shrink-0">${drill.defaultDuration} mins</span>
+              </div>
+
+              <div class="flex flex-wrap gap-1">
+                ${badgesHtml}
+              </div>
+
+              <p class="text-[11px] text-gray-600 dark:text-gray-300 leading-relaxed max-h-24 overflow-y-auto scrollbar-thin bg-gray-50 dark:bg-gray-700/40 p-2 rounded-xl border border-gray-100 dark:border-gray-700/60">
+                ${drill.summary}
+              </p>
+
+              <div class="flex justify-between items-center pt-1 border-t border-gray-100 dark:border-gray-700/60 mt-0.5">
+                <div class="flex items-center gap-2">
+                  ${drill.mediaUrl ? `
+                    <button onclick="openVideoModal('${drill.title.replace(/'/g, "\\'")}', '${drill.mediaUrl.replace(/'/g, "\\'")}')" class="text-[11px] text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 flex items-center gap-1 font-bold transition-colors">
+                      ▶ Preview Video
+                    </button>
+                  ` : '<span class="text-[10px] text-gray-400 italic">No video</span>'}
+                </div>
+
+                <div class="flex items-center gap-1.5">
+                  ${isEditable ? `
+                    <button onclick="editDrill('${drill.id}')" class="text-[11px] bg-amber-50 hover:bg-amber-100 dark:bg-amber-900/40 text-amber-900 dark:text-amber-200 border border-amber-300/80 px-2 py-0.5 rounded-md font-semibold">
+                      ✏️ Edit
+                    </button>
+                    <button onclick="deleteDrill('${drill.id}')" class="text-[11px] bg-red-50 hover:bg-red-100 dark:bg-red-900/40 text-red-800 dark:text-red-200 border border-red-300/80 px-2 py-0.5 rounded-md font-semibold">
+                      🗑️
+                    </button>
+                  ` : `
+                    <span class="text-[10px] text-gray-400 italic">🔒 Read-only</span>
+                  `}
+                  <button onclick="addDrillToSession('${drill.id}', '${timelineSections[0]?.id || ''}')" class="text-xs bg-wolvesNavy dark:bg-wolvesGold dark:text-wolvesNavy hover:bg-wolvesAccent dark:hover:bg-amber-400 text-white px-2.5 py-1 rounded-lg font-bold shadow-2xs">
+                    + Add
+                  </button>
+                </div>
+              </div>
+            </div>
+
+          </div>
+        `;
+      }).join('');
+    }
+
+    // --- RENDER MULTI-SECTION TIMELINE ---
+    function renderSessionPlan() {
+      const container = document.getElementById('sectionsContainer');
+      container.innerHTML = '';
+
+      timelineSections.forEach((sec, secIdx) => {
+        const secDuration = sec.items.reduce((acc, item) => acc + Number(item.duration), 0);
+        
+        const sectionEl = document.createElement('div');
+        sectionEl.className = "bg-gray-50/80 dark:bg-gray-800/40 border border-gray-200/80 dark:border-gray-700/70 rounded-2xl p-4 flex flex-col gap-3.5 shadow-xs transition-colors backdrop-blur-xs";
+        sectionEl.setAttribute('data-section-id', sec.id);
+
+        sectionEl.innerHTML = `
+          <div class="flex justify-between items-center pb-2.5 border-b border-gray-200/80 dark:border-gray-700/80 gap-2">
+            <div class="flex items-center gap-2.5 flex-1">
+              <span class="text-xs font-black bg-wolvesNavy dark:bg-wolvesGold text-white dark:text-wolvesNavy rounded-full h-6 w-6 flex items-center justify-center shrink-0 shadow-xs">${secIdx + 1}</span>
+              <input type="text" value="${sec.title}" onchange="updateSectionTitle('${sec.id}', this.value)" 
+                     class="section-title-input text-xs sm:text-sm font-bold text-wolvesNavy dark:text-amber-400 bg-transparent border-b border-transparent hover:border-gray-300 dark:hover:border-gray-600 focus:border-wolvesGold focus:bg-white dark:focus:bg-gray-700 focus:outline-none px-1.5 py-0.5 rounded-md transition w-full max-w-xs">
+            </div>
+            <div class="flex items-center gap-2">
+              <button onclick="addPlaceholderToSection('${sec.id}')" class="text-xs bg-amber-50 hover:bg-amber-100 dark:bg-amber-900/40 dark:hover:bg-amber-800/60 text-amber-900 dark:text-amber-200 border border-amber-300/80 dark:border-amber-700/80 font-bold px-2.5 py-1 rounded-lg transition-all active:scale-95 no-print flex items-center gap-1 shadow-2xs" title="Add Live Editable Blank Box">
+                <span>✏️</span> + Blank Box
+              </button>
+              <span class="text-xs font-bold text-gray-600 dark:text-gray-300 bg-gray-200/70 dark:bg-gray-700/80 px-3 py-1 rounded-full border border-gray-300/40 dark:border-gray-600/40">${secDuration} mins</span>
+              ${timelineSections.length > 1 ? `
+                <button onclick="removeSection('${sec.id}')" class="text-gray-400 hover:text-red-600 dark:hover:text-red-400 font-bold px-1.5 text-base leading-none no-print transition-colors" title="Delete Section">&times;</button>
+              ` : ''}
+            </div>
+          </div>
+
+          <div id="dropZone_${sec.id}"
+               ondragover="allowDrop(event)"
+               ondragleave="leaveDrop(event)"
+               ondrop="drop(event, '${sec.id}')"
+               class="min-h-[85px] rounded-xl border-2 border-dashed border-gray-200/90 dark:border-gray-700/90 p-3 flex flex-col gap-3 transition-all duration-200">
+            
+            ${sec.items.length === 0 ? `
+              <div class="m-auto text-center py-5 pointer-events-none text-gray-400 dark:text-gray-500 text-xs italic">
+                Drag and drop drills into this section or use '+ Blank Box' / '+ Add' from the library
+              </div>
+            ` : ''}
+
+            ${sec.items.map((item, itemIdx) => {
+              // Check if item is a live placeholder card
+              if (item.isPlaceholder) {
+                return `
+                  <div draggable="true" 
+                       ondragstart="dragFromTimeline(event, '${sec.id}',${itemIdx})" 
+                       ondragover="allowDropTimeline(event)" 
+                       ondrop="dropTimeline(event, '${sec.id}',${itemIdx})"
+                       class="bg-amber-50/70 dark:bg-amber-950/30 border-2 border-dashed border-amber-400/80 dark:border-amber-600/80 rounded-xl p-3.5 flex flex-col gap-2.5 relative group hover:border-wolvesGold cursor-grab active:cursor-grabbing shadow-xs transition-all">
+                    
+                    <div class="flex justify-between items-center gap-2">
+                      <div class="flex-1 flex items-center gap-1.5">
+                        <span class="text-xs shrink-0">✏️</span>
+                        <input type="text" value="${(item.title || '').replace(/"/g, '&quot;')}" placeholder="Card Title (e.g. Water Break / Custom Drill)" 
+                               oninput="updatePlaceholderTitle('${sec.id}',${itemIdx}, this.value)"
+                               class="w-full text-xs sm:text-sm font-bold text-gray-800 dark:text-gray-100 bg-white/90 dark:bg-gray-800/90 border border-gray-300 dark:border-gray-600 rounded-lg px-2.5 py-1 focus:ring-2 focus:ring-wolvesGold/50 focus:outline-none">
+                      </div>
+                      <div class="flex items-center gap-1 shrink-0">
+                        <input type="number" value="${item.duration}" min="1" onchange="updateDuration('${sec.id}',${itemIdx}, this.value)" 
+                          class="w-12 sm:w-14 text-xs font-bold border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-lg p-1 text-center focus:ring-2 focus:ring-wolvesGold/50 focus:outline-none">
+                        <span class="text-xs font-semibold text-gray-500 dark:text-gray-400">m</span>
+                      </div>
+                      <button onclick="removeDrill('${sec.id}',${itemIdx})" class="text-gray-400 hover:text-red-600 dark:hover:text-red-400 px-1 font-bold text-lg leading-none no-print transition-colors">&times;</button>
+                    </div>
+
+                    <div>
+                      <textarea placeholder="Type custom drill notes, constraints, or instructions live..." 
+                                oninput="updatePlaceholderSummary('${sec.id}',${itemIdx}, this.value)"
+                                class="w-full text-xs p-2.5 border border-gray-300 dark:border-gray-600 rounded-lg bg-white/90 dark:bg-gray-800/90 text-gray-800 dark:text-white focus:ring-2 focus:ring-wolvesGold/50 focus:outline-none resize-y min-h-[50px] leading-relaxed">${item.summary || ''}</textarea>
+                    </div>
+                  </div>
+                `;
+              }
+
+              // Standard drill library card
+              const cats = getDrillCategories(item);
+              const catBadgesHtml = cats.map(c => `<span class="text-[9px] uppercase tracking-wider font-semibold text-gray-600 dark:text-gray-300 bg-gray-100 dark:bg-gray-700/80 px-2 py-0.5 rounded-md border border-gray-200 dark:border-gray-600/70">${c}</span>`).join(' ');
+
+              return `
+                <div draggable="true" 
+                     ondragstart="dragFromTimeline(event, '${sec.id}',${itemIdx})" 
+                     ondragover="allowDropTimeline(event)" 
+                     ondrop="dropTimeline(event, '${sec.id}',${itemIdx})"
+                     class="bg-white dark:bg-gray-800 border border-gray-200/90 dark:border-gray-700/90 rounded-xl p-3.5 flex flex-col gap-2 relative group hover:border-wolvesGold/80 dark:hover:border-wolvesGold/80 cursor-grab active:cursor-grabbing shadow-xs hover:shadow-md transition-all">
+                  
+                  <div class="flex justify-between items-center gap-2 pointer-events-none">
+                    <div class="flex-1">
+                      <h4 class="font-bold text-xs sm:text-sm text-gray-800 dark:text-gray-100">${item.title}</h4>
+                      <span class="text-[10px] text-amber-700 dark:text-amber-400 font-medium">By: ${item.createdBy || 'Transforming Basketball'}</span>
+                    </div>
+                    <div class="flex items-center gap-1 pointer-events-auto">
+                      <input type="number" value="${item.duration}" min="1" onchange="updateDuration('${sec.id}',${itemIdx}, this.value)" 
+                        class="w-12 sm:w-14 text-xs font-bold border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-lg p-1 text-center focus:ring-2 focus:ring-wolvesGold/50 focus:outline-none">
+                      <span class="text-xs font-semibold text-gray-500 dark:text-gray-400">m</span>
+                    </div>
+                    <button onclick="removeDrill('${sec.id}',${itemIdx})" class="text-gray-400 hover:text-red-600 dark:hover:text-red-400 px-1 font-bold text-lg leading-none pointer-events-auto no-print transition-colors">&times;</button>
+                  </div>
+
+                  <div class="flex flex-wrap gap-1 pointer-events-none">
+                    ${catBadgesHtml}
+                  </div>
+                  
+                  <p class="text-xs text-gray-600 dark:text-gray-300 pointer-events-none leading-relaxed">${item.summary}</p>
+                  
+                  <div class="pt-1 flex justify-between items-center no-print">
+                    ${item.mediaUrl ? `
+                      <button onclick="openVideoModal('${item.title.replace(/'/g, "\\'")}', '${item.mediaUrl.replace(/'/g, "\\'")}')" class="text-[11px] text-blue-600 dark:text-blue-400 hover:underline flex items-center gap-1 font-semibold pointer-events-auto">
+                        🎥 Preview Media
+                      </button>
+                    ` : '<span></span>'}
+                  </div>
+                </div>
+              `;
+            }).join('')}
+
+          </div>
+        `;
+
+        container.appendChild(sectionEl);
+      });
+
+      calculateStats();
+    }
+
+    // --- PLACEHOLDER BOX HANDLERS ---
+    function addPlaceholderToSection(secId) {
+      const sec = timelineSections.find(s => s.id === secId);
+      if (!sec) return;
+
+      sec.items.push({
+        instanceId: 'inst_ph_' + Date.now() + '_' + Math.random().toString(36).substr(2, 5),
+        title: 'Custom Note / Drill',
+        duration: 5,
+        summary: '',
+        createdBy: currentActiveCoach || 'Coach',
+        isPlaceholder: true
+      });
+
+      renderSessionPlan();
+      autoSaveSessionState();
+      showToast("Blank editable card added!", "success");
+    }
+
+    function updatePlaceholderTitle(secId, itemIdx, val) {
+      const sec = timelineSections.find(s => s.id === secId);
+      if (sec && sec.items[itemIdx]) {
+        sec.items[itemIdx].title = val;
+        autoSaveSessionState();
+      }
+    }
+
+    function updatePlaceholderSummary(secId, itemIdx, val) {
+      const sec = timelineSections.find(s => s.id === secId);
+      if (sec && sec.items[itemIdx]) {
+        sec.items[itemIdx].summary = val;
+        autoSaveSessionState();
+      }
+    }
+
+    // --- SECTION CONTROLS ---
+    function addNewSection() {
+      const nextNum = timelineSections.length + 1;
+      timelineSections.push({
+        id: 'sec_' + Date.now(),
+        title: `Section ${nextNum}: New Block`,
+        items: []
+      });
+      renderSessionPlan();
+      autoSaveSessionState();
+    }
+
+    function removeSection(secId) {
+      const sec = timelineSections.find(s => s.id === secId);
+      if (!sec) return;
+
+      const deleteAction = () => {
+        timelineSections = timelineSections.filter(s => s.id !== secId);
+        renderSessionPlan();
+        autoSaveSessionState();
+        showToast("Section removed.", "info");
+      };
+
+      if (sec.items.length > 0) {
+        showConfirmDialog(
+          "Delete Section",
+          `Are you sure you want to delete "${sec.title}" and its ${sec.items.length} drill(s)?`,
+          "Delete Section",
+          deleteAction
+        );
+      } else {
+        deleteAction();
+      }
+    }
+
+    function updateSectionTitle(secId, newTitle) {
+      const sec = timelineSections.find(s => s.id === secId);
+      if (sec) {
+        sec.title = newTitle;
+        autoSaveSessionState();
+      }
+    }
+
+    // --- DRILL ITEM CONTROLS ---
+    function addDrillToSession(drillId, targetSecId) {
+      let sec = timelineSections.find(s => s.id === targetSecId);
+      if (!sec) sec = timelineSections[0];
+      if (!sec) return;
+
+      const drill = drills.find(d => d.id === drillId);
+      if (drill) {
+        sec.items.push({
+          ...drill,
+          duration: drill.defaultDuration,
+          instanceId: 'inst_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9)
+        });
+        renderSessionPlan();
+        autoSaveSessionState();
+        showToast(`Added "${drill.title}" to ${sec.title}`, "success");
+      }
+    }
+
+    function removeDrill(secId, itemIdx) {
+      const sec = timelineSections.find(s => s.id === secId);
+      if (sec) {
+        sec.items.splice(itemIdx, 1);
+        renderSessionPlan();
+        autoSaveSessionState();
+      }
+    }
+
+    function updateDuration(secId, itemIdx, newDuration) {
+      const sec = timelineSections.find(s => s.id === secId);
+      if (sec && sec.items[itemIdx]) {
+        sec.items[itemIdx].duration = parseInt(newDuration) || 0;
+        calculateStats();
+        autoSaveSessionState();
+      }
+    }
+
+    function clearSession() {
+      showConfirmDialog(
+        "Clear Session Timeline",
+        "Are you sure you want to clear all drills and reset your timeline?",
+        "Clear All",
+        () => {
+          timelineSections = [
+            { id: "sec_1", title: "Section 1: Warm Up & Activation", items: [] },
+            { id: "sec_2", title: "Section 2: Main Content", items: [] },
+            { id: "sec_3", title: "Section 3: Game Based Application", items: [] },
+            { id: "sec_4", title: "Section 4: Cool Down & Reflection", items: [] }
+          ];
+          document.getElementById('coachNotes').value = "";
+          renderSessionPlan();
+          autoSaveSessionState();
+          showToast("Session timeline cleared.", "info");
+        }
+      );
+    }
+
+    function calculateStats() {
+      let totalDrillCount = 0;
+      let totalMins = 0;
+
+      timelineSections.forEach(sec => {
+        totalDrillCount += sec.items.length;
+        totalMins += sec.items.reduce((acc, item) => acc + Number(item.duration), 0);
+      });
+
+      const targetMins = parseInt(document.getElementById('targetDuration').value) || 0;
+
+      document.getElementById('totalMins').innerText = totalMins;
+      document.getElementById('mobilePlanMinsBadge').innerText = totalMins;
+      document.getElementById('drillCountBadge').innerText = `${totalDrillCount} Item${totalDrillCount === 1 ? '' : 's'}`;
+
+      const percentage = targetMins > 0 ? Math.min((totalMins / targetMins) * 100, 100) : 0;
+      const bar = document.getElementById('durationBar');
+      bar.style.width = `${percentage}%`;
+
+      const status = document.getElementById('durationStatus');
+      if (totalMins > targetMins) {
+        bar.className = "h-full rounded-full transition-all duration-300 bg-red-500 shadow-xs";
+        status.innerText = `Target: ${targetMins} mins (${totalMins - targetMins}m over)`;
+        status.className = "text-red-500 dark:text-red-400 font-bold";
+      } else if (totalMins === targetMins && targetMins > 0) {
+        bar.className = "h-full rounded-full transition-all duration-300 bg-emerald-500 shadow-xs";
+        status.innerText = `Target: ${targetMins} mins (Perfect)`;
+        status.className = "text-emerald-600 dark:text-emerald-400 font-bold";
+      } else {
+        bar.className = "h-full rounded-full transition-all duration-300 bg-wolvesNavy dark:bg-wolvesGold shadow-xs";
+        status.innerText = `Target: ${targetMins} mins`;
+        status.className = "text-gray-500 dark:text-gray-400";
+      }
+    }
+
+    // --- DRAG AND DROP HANDLERS ---
+    function dragFromBank(ev, drillId) {
+      ev.dataTransfer.setData("type", "bank");
+      ev.dataTransfer.setData("drillId", drillId);
+    }
+
+    function dragFromTimeline(ev, sourceSecId, sourceItemIdx) {
+      ev.dataTransfer.setData("type", "timeline");
+      ev.dataTransfer.setData("sourceSecId", sourceSecId);
+      ev.dataTransfer.setData("sourceItemIdx", sourceItemIdx);
+    }
+
+    function allowDrop(ev) {
+      ev.preventDefault();
+      ev.currentTarget.classList.add('border-wolvesGold', 'bg-amber-50/50', 'dark:bg-amber-950/20');
+    }
+
+    function leaveDrop(ev) {
+      ev.currentTarget.classList.remove('border-wolvesGold', 'bg-amber-50/50', 'dark:bg-amber-950/20');
+    }
+
+    function allowDropTimeline(ev) {
+      ev.preventDefault();
+      ev.stopPropagation();
+    }
+
+    function dropTimeline(ev, targetSecId, targetItemIdx) {
+      ev.preventDefault();
+      ev.stopPropagation();
+
+      const dropZone = document.getElementById(`dropZone_${targetSecId}`);
+      if (dropZone) dropZone.classList.remove('border-wolvesGold', 'bg-amber-50/50', 'dark:bg-amber-950/20');
+
+      const type = ev.dataTransfer.getData("type");
+      
+      if (type === "timeline") {
+        const sourceSecId = ev.dataTransfer.getData("sourceSecId");
+        const sourceItemIdx = parseInt(ev.dataTransfer.getData("sourceItemIdx"));
+
+        const srcSec = timelineSections.find(s => s.id === sourceSecId);
+        const destSec = timelineSections.find(s => s.id === targetSecId);
+
+        if (srcSec && destSec && !isNaN(sourceItemIdx)) {
+          const [movedItem] = srcSec.items.splice(sourceItemIdx, 1);
+          destSec.items.splice(targetItemIdx, 0, movedItem);
+          renderSessionPlan();
+          autoSaveSessionState();
+        }
+      } else if (type === "bank") {
+        const drillId = ev.dataTransfer.getData("drillId");
+        const drill = drills.find(d => d.id === drillId);
+        const destSec = timelineSections.find(s => s.id === targetSecId);
+
+        if (drill && destSec) {
+          destSec.items.splice(targetItemIdx, 0, {
+            ...drill,
+            duration: drill.defaultDuration,
+            instanceId: 'inst_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9)
+          });
+          renderSessionPlan();
+          autoSaveSessionState();
+        }
+      }
+    }
+
+    function drop(ev, targetSecId) {
+      ev.preventDefault();
+      const dropZone = document.getElementById(`dropZone_${targetSecId}`);
+      if (dropZone) dropZone.classList.remove('border-wolvesGold', 'bg-amber-50/50', 'dark:bg-amber-950/20');
+
+      const type = ev.dataTransfer.getData("type");
+      const destSec = timelineSections.find(s => s.id === targetSecId);
+      if (!destSec) return;
+
+      if (type === "bank") {
+        const drillId = ev.dataTransfer.getData("drillId");
+        const drill = drills.find(d => d.id === drillId);
+        if (drill) {
+          destSec.items.push({
+            ...drill,
+            duration: drill.defaultDuration,
+            instanceId: 'inst_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9)
+          });
+          renderSessionPlan();
+          autoSaveSessionState();
+        }
+      } else if (type === "timeline") {
+        const sourceSecId = ev.dataTransfer.getData("sourceSecId");
+        const sourceItemIdx = parseInt(ev.dataTransfer.getData("sourceItemIdx"));
+        const srcSec = timelineSections.find(s => s.id === sourceSecId);
+
+        if (srcSec && !isNaN(sourceItemIdx)) {
+          const [movedItem] = srcSec.items.splice(sourceItemIdx, 1);
+          destSec.items.push(movedItem);
+          renderSessionPlan();
+          autoSaveSessionState();
+        }
+      }
+    }
+
+    // --- MODAL CONTROLS & MEDIA EMBED PARSER ---
+    function openExportModal() { document.getElementById('exportModal').classList.remove('hidden'); }
+    function closeExportModal() { document.getElementById('exportModal').classList.add('hidden'); }
+
+    function openAddDrillModal() {
+      if (!document.getElementById('editingDrillId').value) {
+        document.getElementById('modalFormTitle').innerText = "Add Custom Basketball Drill";
+        renderCategoryCheckboxes(["Warm Up"]);
+        if (currentActiveCoach) {
+          document.getElementById('newDrillAuthor').value = currentActiveCoach;
+        }
+      }
+      document.getElementById('categoryCheckboxError').classList.add('hidden');
+      document.getElementById('addDrillModal').classList.remove('hidden'); 
+    }
+    
+    function closeAddDrillModal() { 
+      document.getElementById('addDrillModal').classList.add('hidden'); 
+      document.getElementById('addDrillForm').reset();
+      document.getElementById('editingDrillId').value = "";
+    }
+    
+    function openSettingsModal() { document.getElementById('settingsModal').classList.remove('hidden'); }
+    function closeSettingsModal() { document.getElementById('settingsModal').classList.add('hidden'); }
+    function saveSettings() {
+      const url = document.getElementById('googleAppScriptUrl').value.trim();
+      localStorage.setItem('wolves_script_url', url);
+      closeSettingsModal();
+      fetchSheetDrills();
+      showToast("Google App Script URL updated.", "success");
+    }
+
+    function openVideoModal(title, url) {
+      document.getElementById('modalTitle').innerText = title;
+      const container = document.getElementById('modalVideoContainer');
+      const externalBtn = document.getElementById('externalVideoBtn');
+
+      externalBtn.href = url;
+      externalBtn.classList.remove('hidden');
+
+      const isInstagram = url.includes('instagram.com');
+      const isYouTube = url.includes('youtube.com') || url.includes('youtu.be');
+
+      if (isInstagram) {
+        let cleanUrl = url.split('?')[0];
+        if (!cleanUrl.endsWith('/')) cleanUrl += '/';
+        const embedUrl = cleanUrl + 'embed/captioned/';
+
+        container.innerHTML = `
+          <iframe class="w-full h-[520px] max-h-[75vh] border-0 rounded-lg bg-white" src="${embedUrl}" allowtransparency="true" allowfullscreen="true"></iframe>
+        `;
+
+        if (window.instgrm) {
+          window.instgrm.Embeds.process();
+        }
+      } else if (isYouTube) {
+        let videoId = '';
+        try {
+          const parsedUrl = new URL(url);
+          if (parsedUrl.hostname.includes('youtube.com')) {
+            if (parsedUrl.pathname.startsWith('/shorts/')) {
+              videoId = parsedUrl.pathname.split('/shorts/')[1].split('/')[0];
+            } else if (parsedUrl.pathname.startsWith('/embed/')) {
+              videoId = parsedUrl.pathname.split('/embed/')[1].split('/')[0];
+            } else {
+              videoId = parsedUrl.searchParams.get('v');
+            }
+          } else if (parsedUrl.hostname.includes('youtu.be')) {
+            videoId = parsedUrl.pathname.substring(1).split('/')[0];
+          }
+        } catch (e) {
+          console.error('Invalid URL format', e);
+        }
+
+        if (!videoId) {
+          const match = url.match(/(?:youtu\.be\/|youtube\.com\/(?:embed\/|v\/|watch\?v=|watch\?.+&v=|shorts\/))([\w-]{11})/);
+          if (match && match[1]) {
+            videoId = match[1];
+          }
+        }
+        
+        const embedUrl = videoId ? `https://www.youtube.com/embed/${videoId}` : url;
+        
+        container.innerHTML = `<iframe class="w-full aspect-video border-0 rounded-lg" src="${embedUrl}" referrerpolicy="strict-origin-when-cross-origin" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe>`;
+      } else {
+        container.innerHTML = `<iframe class="w-full h-[450px] border-0 rounded-lg bg-white" src="${url}" allowfullscreen></iframe>`;
+      }
+
+      document.getElementById('videoModal').classList.remove('hidden');
+    }
+
+    function closeVideoModal() {
+      document.getElementById('videoModal').classList.add('hidden');
+      document.getElementById('modalVideoContainer').innerHTML = '';
+      document.getElementById('externalVideoBtn').classList.add('hidden');
+    }
+
+    // --- HYBRID EXPORT ENGINES ---
+    function copyTextPlanToClipboard() {
+      const team = document.getElementById('teamSelect').value;
+      const coach = document.getElementById('coachSelect').value;
+      const dateVal = document.getElementById('sessionDate').value;
+      const totalMins = document.getElementById('totalMins').innerText;
+      const targetMins = document.getElementById('targetDuration').value;
+      const notes = document.getElementById('coachNotes').value;
+
+      let text = `🏀 JLC WOLVES SESSION PLAN - ${team.toUpperCase()}\n`;
+      text += `📅 Date: ${dateVal || 'N/A'} | 👤 Coach: ${coach}\n`;
+      text += `⏱️ Total Duration: ${totalMins} Mins (Target: ${targetMins} Mins)\n`;
+      text += `-------------------------------------------\n\n`;
+
+      timelineSections.forEach((sec, idx) => {
+        const secDuration = sec.items.reduce((acc, item) => acc + Number(item.duration), 0);
+        text += `📌 ${idx + 1}. ${sec.title} (${secDuration}m)\n`;
+        if (sec.items.length === 0) {
+          text += `   (No drills in this section)\n`;
+        } else {
+          sec.items.forEach(item => {
+            const cats = getDrillCategories(item).join(', ');
+            text += `   • ${item.title} - ${item.duration}m [${cats}]\n`;
+            if (item.summary) text += `     Summary: ${item.summary}\n`;
+          });
+        }
+        text += `\n`;
+      });
+
+      if (notes && notes.trim()) {
+        text += `📝 COACH NOTES & TASK CONSTRAINTS:\n${notes}\n`;
+      }
+
+      navigator.clipboard.writeText(text).then(() => {
+        showToast("Session plan text summary copied to clipboard!", "success");
+        closeExportModal();
+      }).catch(err => {
+        console.error("Clipboard copy failed", err);
+        showToast("Failed to copy text. Please try PDF export.", "error");
+      });
+    }
+
+    function exportSessionJSON() {
+      const state = {
+        team: document.getElementById('teamSelect').value,
+        coach: document.getElementById('coachSelect').value,
+        activeCoach: currentActiveCoach,
+        date: document.getElementById('sessionDate').value,
+        targetDuration: document.getElementById('targetDuration').value,
+        notes: document.getElementById('coachNotes').value,
+        sections: timelineSections,
+        exportedAt: new Date().toISOString()
+      };
+
+      const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(state, null, 2));
+      const downloadAnchor = document.createElement('a');
+      downloadAnchor.setAttribute("href", dataStr);
+      downloadAnchor.setAttribute("download", `Wolves_Session_${state.team.replace(/\s+/g, '_')}_${state.date || 'plan'}.json`);
+      document.body.appendChild(downloadAnchor);
+      downloadAnchor.click();
+      downloadAnchor.remove();
+      closeExportModal();
+      showToast("Session JSON file downloaded.", "success");
+    }
+
+    function importSessionJSON(event) {
+      const file = event.target.files[0];
+      if (!file) return;
+
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        try {
+          const state = JSON.parse(e.target.result);
+          if (state.team) document.getElementById('teamSelect').value = state.team;
+          if (state.coach) {
+            document.getElementById('coachSelect').value = state.coach;
+            setCoachIdentity(state.coach);
+          }
+          if (state.date) document.getElementById('sessionDate').value = state.date;
+          if (state.targetDuration) document.getElementById('targetDuration').value = state.targetDuration;
+          if (state.notes) document.getElementById('coachNotes').value = state.notes;
+          if (Array.isArray(state.sections)) {
+            timelineSections = state.sections;
+          }
+          renderSessionPlan();
+          updateTeamBranding();
+          autoSaveSessionState();
+          showToast("Session plan imported successfully!", "success");
+          closeExportModal();
+        } catch (err) {
+          showToast("Error: Uploaded file is not a valid Wolves session JSON.", "error");
+          console.error(err);
+        }
+      };
+      reader.readAsText(file);
+    }
+
+    function fetchImageDataUrl(url) {
+      return new Promise((resolve, reject) => {
+        const img = new Image();
+        img.crossOrigin = 'Anonymous';
+        img.onload = () => {
+          try {
+            const canvas = document.createElement('canvas');
+            canvas.width = img.naturalWidth || img.width;
+            canvas.height = img.naturalHeight || img.height;
+            const ctx = canvas.getContext('2d');
+            ctx.drawImage(img, 0, 0);
+            resolve(canvas.toDataURL('image/png'));
+          } catch (err) {
+            reject(err);
+          }
+        };
+        img.onerror = (err) => reject(err);
+        img.src = url;
+      });
+    }
+
+    // --- PNG / JPEG IMAGE EXPORT ENGINE ---
+    async function exportImage(mode, format = 'png') {
+      showToast("Generating image(s), please wait...", "info");
+      try {
+        const team = document.getElementById('teamSelect').value;
+        const coach = document.getElementById('coachSelect').value;
+        const dateVal = document.getElementById('sessionDate').value;
+        const targetMins = document.getElementById('targetDuration').value;
+        const totalMins = document.getElementById('totalMins').innerText;
+        const notes = document.getElementById('coachNotes').value;
+
+        const isNBL = team === "U14 NBL" || team === "U16 NBL";
+        const logoSrc = isNBL ? LOGO_NBL : LOGO_PRIMARY;
+        let logoDataUrl = '';
+        try {
+          if (logoSrc) logoDataUrl = await fetchImageDataUrl(logoSrc);
+        } catch (e) {
+          console.warn('Logo base64 conversion skipped:', e);
+        }
+
+        const ext = format === 'jpeg' ? 'jpg' : 'png';
+        const mime = format === 'jpeg' ? 'image/jpeg' : 'image/png';
+
+        if (mode === 'full') {
+          // Condense the whole plan into one single image
+          const stage = document.createElement('div');
+          stage.style.cssText = 'position: absolute; left: -9999px; top: 0; width: 900px; background: #ffffff; padding: 24px; font-family: ui-sans-serif, system-ui, -apple-system, sans-serif; color: #0f172a; box-sizing: border-box;';
+
+          let html = `
+            <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 3px solid #0d1b2a; padding-bottom: 12px; margin-bottom: 16px;">
+              <div style="display: flex; align-items: center; gap: 14px;">
+                ${logoDataUrl ? `<img src="${logoDataUrl}" style="height: 54px; width: auto; object-fit: contain;" />` : ''}
+                <div>
+                  <h1 style="margin: 0; font-size: 22px; font-weight: 900; color: #0d1b2a; text-transform: uppercase;">JLC SCUNTHORPE WOLVES</h1>
+                  <h2 style="margin: 2px 0 0 0; font-size: 14px; font-weight: 700; color: #b45309;">${team} - Session Plan</h2>
+                </div>
+              </div>
+              <div style="text-align: right; font-size: 11px; color: #334155; line-height: 1.6;">
+                <p style="margin: 0;"><strong>Lead Coach:</strong> ${coach || 'N/A'}</p>
+                <p style="margin: 0;"><strong>Date:</strong> ${dateVal || 'N/A'}</p>
+                <p style="margin: 0;"><strong>Planned Duration:</strong> ${totalMins} Mins (Target: ${targetMins} Mins)</p>
+              </div>
+            </div>
+          `;
+
+          timelineSections.forEach((sec, idx) => {
+            const secDuration = sec.items.reduce((acc, item) => acc + Number(item.duration), 0);
+            html += `
+              <div style="margin-bottom: 16px;">
+                <div style="background-color: #f1f5f9; border: 1px solid #cbd5e1; border-left: 5px solid #0d1b2a; padding: 8px 12px; border-radius: 6px; display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                  <span style="font-size: 13px; font-weight: 800; color: #0d1b2a;">Section ${idx + 1}: ${sec.title}</span>
+                  <span style="font-size: 11px; font-weight: 700; color: #475569; background: #e2e8f0; padding: 2px 8px; border-radius: 12px;">${secDuration} mins</span>
+                </div>
+            `;
+
+            if (sec.items.length === 0) {
+              html += `<div style="padding: 10px; font-size: 11px; color: #94a3b8; font-style: italic; text-align: center; border: 1px dashed #cbd5e1; border-radius: 6px; margin-bottom: 8px;">No drills in this section.</div>`;
+            } else {
+              sec.items.forEach(item => {
+                const cats = getDrillCategories(item);
+                const badges = cats.map(c => `<span style="font-size: 9px; font-weight: 700; text-transform: uppercase; background: #f1f5f9; color: #475569; padding: 2px 6px; border-radius: 4px; border: 1px solid #e2e8f0; margin-right: 4px;">${c}</span>`).join('');
+                html += `
+                  <div style="background: #ffffff; border: 1px solid #cbd5e1; border-left: 4px solid #d89c4e; border-radius: 6px; padding: 10px 12px; margin-bottom: 8px;">
+                    <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 6px;">
+                      <div>
+                        <span style="font-size: 13px; font-weight: 800; color: #0d1b2a;">${item.title}</span>
+                        <span style="font-size: 10px; font-weight: 600; color: #b45309; margin-left: 8px;">✍️ ${item.createdBy || 'Transforming Basketball'}</span>
+                      </div>
+                      <div style="display: flex; gap: 6px; align-items: center;">
+                        <div>${badges}</div>
+                        <span style="font-size: 11px; font-weight: 800; background: #fef3c7; color: #92400e; padding: 2px 8px; border-radius: 4px; border: 1px solid #fde68a;">${item.duration} mins</span>
+                      </div>
+                    </div>
+                    <div style="font-size: 11px; color: #1e293b; line-height: 1.5; white-space: pre-wrap;">${item.summary || ''}</div>
+                  </div>
+                `;
+              });
+            }
+            html += `</div>`;
+          });
+
+          if (notes && notes.trim() !== '') {
+            html += `
+              <div style="margin-top: 16px; padding: 12px; background: #f8fafc; border: 1px solid #cbd5e1; border-radius: 6px;">
+                <span style="display: block; font-size: 11px; font-weight: 800; color: #0d1b2a; text-transform: uppercase; margin-bottom: 4px;">Coach Notes & Task Constraints:</span>
+                <div style="font-size: 11px; color: #334155; line-height: 1.5; white-space: pre-wrap;">${notes}</div>
+              </div>
+            `;
+          }
+
+          stage.innerHTML = html;
+          document.body.appendChild(stage);
+
+          const canvas = await html2canvas(stage, { scale: 2, useCORS: true, backgroundColor: '#ffffff' });
+          document.body.removeChild(stage);
+
+          const dataUrl = canvas.toDataURL(mime, 0.95);
+          triggerDownload(dataUrl, `JLC_Wolves_${team.replace(/\s+/g, '_')}_FullPlan.${ext}`);
+          showToast(`Full plan image exported (${ext.toUpperCase()})!`, "success");
+
+        } else if (mode === 'sections') {
+          // Export each section individually as separate images
+          let count = 0;
+          for (let idx = 0; idx < timelineSections.length; idx++) {
+            const sec = timelineSections[idx];
+            const secDuration = sec.items.reduce((acc, item) => acc + Number(item.duration), 0);
+
+            const stage = document.createElement('div');
+            stage.style.cssText = 'position: absolute; left: -9999px; top: 0; width: 800px; background: #ffffff; padding: 20px; font-family: ui-sans-serif, system-ui, -apple-system, sans-serif; color: #0f172a; box-sizing: border-box;';
+
+            let html = `
+              <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #0d1b2a; padding-bottom: 10px; margin-bottom: 14px;">
+                <div style="display: flex; align-items: center; gap: 10px;">
+                  ${logoDataUrl ? `<img src="${logoDataUrl}" style="height: 40px; width: auto; object-fit: contain;" />` : ''}
+                  <div>
+                    <h1 style="margin: 0; font-size: 16px; font-weight: 900; color: #0d1b2a; text-transform: uppercase;">JLC SCUNTHORPE WOLVES</h1>
+                    <h2 style="margin: 1px 0 0 0; font-size: 12px; font-weight: 700; color: #b45309;">${team} - ${sec.title}</h2>
+                  </div>
+                </div>
+                <div style="text-align: right; font-size: 10px; color: #334155;">
+                  <p style="margin: 0;"><strong>Coach:</strong> ${coach || 'N/A'} | <strong>Date:</strong> ${dateVal || 'N/A'}</p>
+                  <p style="margin: 2px 0 0 0;"><strong>Section Duration:</strong> ${secDuration} Mins</p>
+                </div>
+              </div>
+
+              <div style="background-color: #f1f5f9; border: 1px solid #cbd5e1; border-left: 5px solid #0d1b2a; padding: 8px 12px; border-radius: 6px; margin-bottom: 12px;">
+                <span style="font-size: 13px; font-weight: 800; color: #0d1b2a;">Section ${idx + 1}: ${sec.title} (${secDuration} mins)</span>
+              </div>
+            `;
+
+            if (sec.items.length === 0) {
+              html += `<div style="padding: 12px; font-size: 11px; color: #94a3b8; font-style: italic; text-align: center; border: 1px dashed #cbd5e1; border-radius: 6px;">No drills in this section.</div>`;
+            } else {
+              sec.items.forEach(item => {
+                const cats = getDrillCategories(item);
+                const badges = cats.map(c => `<span style="font-size: 9px; font-weight: 700; text-transform: uppercase; background: #f1f5f9; color: #475569; padding: 2px 6px; border-radius: 4px; border: 1px solid #e2e8f0; margin-right: 4px;">${c}</span>`).join('');
+                html += `
+                  <div style="background: #ffffff; border: 1px solid #cbd5e1; border-left: 4px solid #d89c4e; border-radius: 6px; padding: 10px 12px; margin-bottom: 8px;">
+                    <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 6px;">
+                      <div>
+                        <span style="font-size: 13px; font-weight: 800; color: #0d1b2a;">${item.title}</span>
+                        <span style="font-size: 10px; font-weight: 600; color: #b45309; margin-left: 8px;">✍️ ${item.createdBy || 'Transforming Basketball'}</span>
+                      </div>
+                      <div style="display: flex; gap: 6px; align-items: center;">
+                        <div>${badges}</div>
+                        <span style="font-size: 11px; font-weight: 800; background: #fef3c7; color: #92400e; padding: 2px 8px; border-radius: 4px; border: 1px solid #fde68a;">${item.duration} mins</span>
+                      </div>
+                    </div>
+                    <div style="font-size: 11px; color: #1e293b; line-height: 1.5; white-space: pre-wrap;">${item.summary || ''}</div>
+                  </div>
+                `;
+              });
+            }
+
+            stage.innerHTML = html;
+            document.body.appendChild(stage);
+
+            const canvas = await html2canvas(stage, { scale: 2, useCORS: true, backgroundColor: '#ffffff' });
+            document.body.removeChild(stage);
+
+            const dataUrl = canvas.toDataURL(mime, 0.95);
+            const safeSecTitle = sec.title.replace(/[^a-zA-Z0-9_-]/g, '_');
+            triggerDownload(dataUrl, `JLC_Wolves_Sec${idx + 1}_${safeSecTitle}.${ext}`);
+            count++;
+          }
+          showToast(`Exported ${count} section image(s) (${ext.toUpperCase()})!`, "success");
+        }
+      } catch (err) {
+        console.error("Image Export Error:", err);
+        showToast("An error occurred while exporting image(s).", "error");
+      }
+    }
+
+    function triggerDownload(dataUrl, fileName) {
+      const link = document.createElement('a');
+      link.download = fileName;
+      link.href = dataUrl;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    }
+
+    async function exportToPDF() {
+      try {
+        const team = document.getElementById('teamSelect').value;
+        const coach = document.getElementById('coachSelect').value;
+        const dateVal = document.getElementById('sessionDate').value;
+        const targetMins = document.getElementById('targetDuration').value;
+        const totalMins = document.getElementById('totalMins').innerText;
+        const notes = document.getElementById('coachNotes').value;
+        
+        const isNBL = team === "U14 NBL" || team === "U16 NBL";
+        const logoSrc = isNBL ? LOGO_NBL : LOGO_PRIMARY;
+
+        let logoDataUrl = '';
+        try {
+          if (logoSrc) {
+            logoDataUrl = await fetchImageDataUrl(logoSrc);
+          }
+        } catch (e) {
+          console.warn('Logo base64 conversion skipped:', e);
+        }
+
+        let printHtml = `
+          <div style="width: 960px; font-family: ui-sans-serif, system-ui, -apple-system, sans-serif; color: #0f172a; background: #ffffff; padding: 24px; box-sizing: border-box;">
+            
+            <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 3px solid #0d1b2a; padding-bottom: 12px; margin-bottom: 16px;">
+              <div style="display: flex; align-items: center; gap: 14px;">
+                ${logoDataUrl ? `<img src="${logoDataUrl}" style="height: 54px; width: auto; object-fit: contain;" />` : ''}
+                <div>
+                  <h1 style="margin: 0; font-size: 22px; font-weight: 900; color: #0d1b2a; text-transform: uppercase;">JLC SCUNTHORPE WOLVES</h1>
+                  <h2 style="margin: 2px 0 0 0; font-size: 14px; font-weight: 700; color: #b45309;">${team} - Session Plan</h2>
+                </div>
+              </div>
+              <div style="text-align: right; font-size: 11px; color: #334155; line-height: 1.6;">
+                <p style="margin: 0;"><strong>Lead Coach:</strong> ${coach || 'N/A'}</p>
+                <p style="margin: 0;"><strong>Date:</strong> ${dateVal || 'N/A'}</p>
+                <p style="margin: 0;"><strong>Planned Duration:</strong> ${totalMins} Mins (Target: ${targetMins} Mins)</p>
+              </div>
+            </div>
+
+            <div>
+        `;
+
+        timelineSections.forEach((sec, idx) => {
+          const secDuration = sec.items.reduce((acc, item) => acc + Number(item.duration), 0);
+          
+          printHtml += `
+            <div class="pdf-sec-block" style="margin-bottom: 18px; page-break-inside: avoid; break-inside: avoid; break-inside: avoid-page;">
+              <div style="background-color: #f1f5f9; border: 1px solid #cbd5e1; border-left: 5px solid #0d1b2a; padding: 8px 12px; border-radius: 6px; display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                <span style="font-size: 13px; font-weight: 800; color: #0d1b2a;">Section ${idx + 1}: ${sec.title}</span>
+                <span style="font-size: 11px; font-weight: 700; color: #475569; background: #e2e8f0; padding: 2px 8px; border-radius: 12px;">${secDuration} mins</span>
+              </div>
+          `;
+
+          if (sec.items.length === 0) {
+            printHtml += `
+              <div style="padding: 10px; font-size: 11px; color: #94a3b8; font-style: italic; text-align: center; border: 1px dashed #cbd5e1; border-radius: 6px; margin-bottom: 8px;">
+                No drills added to this section.
+              </div>
+            `;
+          } else {
+            sec.items.forEach(item => {
+              const cats = getDrillCategories(item);
+              const pdfBadges = cats.map(c => `<span style="font-size: 9px; font-weight: 700; text-transform: uppercase; background: #f1f5f9; color: #475569; padding: 2px 6px; border-radius: 4px; border: 1px solid #e2e8f0; margin-right: 4px;">${c}</span>`).join('');
+
+              printHtml += `
+                <div class="pdf-drill-card" style="background: #ffffff; border: 1px solid #cbd5e1; border-left: 4px solid #d89c4e; border-radius: 6px; padding: 10px 12px; margin-bottom: 8px; page-break-inside: avoid; break-inside: avoid; break-inside: avoid-page;">
+                  <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 6px;">
+                    <div>
+                      <span style="font-size: 13px; font-weight: 800; color: #0d1b2a;">${item.title}</span>
+                      <span style="font-size: 10px; font-weight: 600; color: #b45309; margin-left: 8px;">✍️ ${item.createdBy || 'Transforming Basketball'}</span>
+                    </div>
+                    <div style="display: flex; gap: 6px; align-items: center;">
+                      <div>${pdfBadges}</div>
+                      <span style="font-size: 11px; font-weight: 800; background: #fef3c7; color: #92400e; padding: 2px 8px; border-radius: 4px; border: 1px solid #fde68a;">${item.duration} mins</span>
+                    </div>
+                  </div>
+                  <div style="font-size: 11px; color: #1e293b; line-height: 1.5; white-space: pre-wrap;">${item.summary}</div>
+                </div>
+              `;
+            });
+          }
+
+          printHtml += `</div>`;
+        });
+
+        if (notes && notes.trim() !== '') {
+          printHtml += `
+            <div style="margin-top: 20px; padding: 12px; background: #f8fafc; border: 1px solid #cbd5e1; border-radius: 6px; page-break-inside: avoid; break-inside: avoid; break-inside: avoid-page;">
+              <span style="display: block; font-size: 11px; font-weight: 800; color: #0d1b2a; text-transform: uppercase; margin-bottom: 4px;">Coach Notes & Task Constraints:</span>
+              <div style="font-size: 11px; color: #334155; line-height: 1.5; white-space: pre-wrap;">${notes}</div>
+            </div>
+          `;
+        }
+
+        printHtml += `</div></div>`;
+
+        const stage = document.createElement('div');
+        stage.id = 'pdf-stage-element';
+        stage.style.cssText = 'position: absolute; left: -9999px; top: 0; width: 960px; background: #ffffff;';
+        stage.innerHTML = printHtml;
+        document.body.appendChild(stage);
+
+        const opt = {
+          margin: [8, 8, 8, 8],
+          filename: `JLC_Wolves_${team.replace(/\s+/g, '_')}_${dateVal || 'Plan'}.pdf`,
+          image: { type: 'jpeg', quality: 0.98 },
+          html2canvas: {
+            scale: 2,
+            useCORS: true,
+            allowTaint: false,
+            logging: false,
+            scrollX: 0,
+            scrollY: 0,
+            windowWidth: 960
+          },
+          jsPDF: { unit: 'mm', format: 'a4', orientation: 'landscape' },
+          pagebreak: { mode: ['css', 'legacy'], avoid: ['.pdf-sec-block', '.pdf-drill-card'] }
+        };
+
+        await html2pdf().set(opt).from(stage).save();
+
+        document.body.removeChild(stage);
+        showToast("PDF generated successfully!", "success");
+      } catch (err) {
+        console.error("PDF Export Error:", err);
+        showToast("An error occurred while exporting the PDF.", "error");
+      }
+    }
+  </script>
+</body>
+</html>
